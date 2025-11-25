@@ -1,0 +1,47 @@
+{
+  "tasks": [
+    {
+      "label": "(Debug)C/C++: g++ compile file",
+      "type": "shell",
+      "command": "I:\\MSYS2\\ucrt64\\bin\\g++.exe",
+      "args": [
+        "-fdiagnostics-color=always",
+        "-g",
+        "-std=c++23",
+        "-c",
+        "${file}",
+        "-o",
+        "${workspaceFolder}\\Intermediate\\Object\\${fileBasenameNoExtension}.o"
+      ],
+      "problemMatcher": [
+        "$gcc"
+      ]
+    },
+    {
+      "label": "(Debug)C/C++: g++ link file",
+      "type": "shell",
+      "dependsOn": "(Debug)C/C++: g++ compile file",
+      "command": "I:\\MSYS2\\ucrt64\\bin\\g++.exe",
+      "args": [
+        "${workspaceFolder}\\Intermediate\\Object\\${fileBasenameNoExtension}.o",
+        "-o",
+        "${workspaceFolder}\\Execution\\Debug\\${fileBasenameNoExtension}.exe",
+        "-std=c++23",
+        "-lstdc++exp"
+      ]
+    },
+    {
+      "type": "shell",
+      "label": "(Debug)C/C++: g++.exe build active file",
+      "dependsOn": [
+        "(Debug)C/C++: g++ compile file",
+        "(Debug)C/C++: g++ link file"
+      ],
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      }
+    },
+  ],
+  "version": "2.0.0"
+}

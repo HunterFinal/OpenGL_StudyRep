@@ -1,0 +1,8 @@
+[
+{
+  "directory": "H:/GithubRepository/OpenGL_StudyRep/Intermediate",
+  "command": "I:\\MSYS2\\ucrt64\\bin\\g++.exe -g -std=gnu++23 -Wall -std=c++23 -fmodules-ts -fmodule-mapper=src\\CMakeFiles\\OpenGL_Study.dir\\Main.cpp.obj.modmap -MD -fdeps-format=p1689r5 -x c++ -o src\\CMakeFiles\\OpenGL_Study.dir\\Main.cpp.obj -c H:\\GithubRepository\\OpenGL_StudyRep\\src\\Main.cpp",
+  "file": "H:\\GithubRepository\\OpenGL_StudyRep\\src\\Main.cpp",
+  "output": "src\\CMakeFiles\\OpenGL_Study.dir\\Main.cpp.obj"
+}
+]
