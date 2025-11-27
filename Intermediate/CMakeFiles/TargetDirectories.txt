@@ -1,6 +1,0 @@
-D:/GithubRepository/OpenGL/Intermediate/CMakeFiles/edit_cache.dir
-D:/GithubRepository/OpenGL/Intermediate/CMakeFiles/rebuild_cache.dir
-D:/GithubRepository/OpenGL/Intermediate/src/CMakeFiles/OpenGL_Study.dir
-D:/GithubRepository/OpenGL/Intermediate/src/CMakeFiles/glad.dir
-D:/GithubRepository/OpenGL/Intermediate/src/CMakeFiles/edit_cache.dir
-D:/GithubRepository/OpenGL/Intermediate/src/CMakeFiles/rebuild_cache.dir
