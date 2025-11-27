@@ -1,31 +1,52 @@
 {
   "configurations": [
+    // {
+    //   "name": "C/C++: g++.exe build and debug active file",
+    //   "type": "cppdbg",
+    //   "request": "launch",
+    //   "program": "${workspaceFolder}\\Execution\\Debug\\Main.exe",
+    //   "args": [],
+    //   "stopAtEntry": false,
+    //   "cwd": "${fileDirname}",
+    //   "environment": [],
+    //   "externalConsole": false,
+    //   "MIMode": "gdb",
+    //   "setupCommands": [
+    //     {
+    //       "description": "Enable pretty-printing for gdb",
+    //       "text": "-enable-pretty-printing",
+    //       "ignoreFailures": true
+    //     },
+    //     {
+    //       "description": "Set Disassembly Flavor to Intel",
+    //       "text": "-gdb-set disassembly-flavor intel",
+    //       "ignoreFailures": true
+    //     }
+    //   ],
+    //   "preLaunchTask": "(Debug)C/C++: g++.exe build active file"
+    // }
     {
-      "name": "C/C++: g++.exe build and debug active file",
-      "type": "cppdbg",
+      "name": "(Windows) Debug Start",
+      "type": "cppvsdbg",
       "request": "launch",
-      "program": "${workspaceFolder}\\Execution\\Debug\\Main.exe",
+      "program": "${workspaceFolder}/Execution/Debug/OpenGL_Study.exe",
       "args": [],
       "stopAtEntry": false,
       "cwd": "${fileDirname}",
       "environment": [],
-      "externalConsole": false,
-      "MIMode": "gdb",
-      "miDebuggerPath": "I:\\MSYS2\\ucrt64\\bin\\gdb.exe",
-      "setupCommands": [
-        {
-          "description": "Enable pretty-printing for gdb",
-          "text": "-enable-pretty-printing",
-          "ignoreFailures": true
-        },
-        {
-          "description": "Set Disassembly Flavor to Intel",
-          "text": "-gdb-set disassembly-flavor intel",
-          "ignoreFailures": true
-        }
-      ],
-      "preLaunchTask": "(Debug)C/C++: g++.exe build active file"
-    }
+      //"console": "externalTerminal",
+    },
+    {
+      "name": "(Windows) Release Start",
+      "type": "cppvsdbg",
+      "request": "launch",
+      "program": "${workspaceFolder}/Execution/Release/OpenGL_Study.exe",
+      "args": [],
+      "stopAtEntry": false,
+      "cwd": "${fileDirname}",
+      "environment": [],
+      //"console": "externalTerminal",
+    },
   ],
   "version": "2.0.0"
 }

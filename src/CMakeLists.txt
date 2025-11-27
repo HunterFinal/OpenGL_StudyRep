@@ -9,6 +9,23 @@ add_executable(
   ${CMAKE_CURRENT_SOURCE_DIR}/Main.cpp
 )
 
+# glad
+add_library(glad
+  ${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/src/glad/glad.c
+)
+
+target_include_directories(
+  glad
+  PRIVATE
+  ${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/header
+)
+
+target_link_libraries(
+  OpenGL_Study
+  PRIVATE
+  glad
+)
+
 target_compile_features(
   OpenGL_Study
   PRIVATE
@@ -22,6 +39,50 @@ set_target_properties(
   RUNTIME_OUTPUT_DIRECTORY_RELEASE "${PROJECT_SOURCE_DIR}/Execution/Release"
 )
 
+# Include third party headers
+target_include_directories(
+  OpenGL_Study
+  PRIVATE
+  ${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/header
+)
+
+# Third party libraries
+if (MSVC)
+  file(GLOB THIRD_PARTY_LIBS "${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/lib/*.lib")
+else()
+  file(GLOB THIRD_PARTY_LIBS "${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/lib/*.a")
+endif()
+
+# Link third party libraries
+foreach(LIB ${THIRD_PARTY_LIBS})
+  get_filename_component(LIB_NAME ${LIB} NAME_WE)
+  message("Detected library: ${LIB_NAME}")
+endforeach()
+
+target_link_libraries(
+  OpenGL_Study
+  PRIVATE
+  ${THIRD_PARTY_LIBS}
+)
+
+target_link_libraries(
+  OpenGL_Study
+  PRIVATE
+  stdc++exp
+)
+
+# Third party libraries(DLL)
+file(GLOB THIRD_PARTY_DLLS "${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/lib/*.dll")
+
+# Copy DLL
+add_custom_command(TARGET OpenGL_Study POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different
+          ${THIRD_PARTY_DLLS} $<TARGET_FILE_DIR:OpenGL_Study>
+
+  VERBATIM
+)
+
+
 if(MSVC)
 
 else()
@@ -32,8 +93,3 @@ else()
     -std=c++23
   )
 endif()
-
-
-add_custom_command(TARGET OpenGL_Study POST_BUILD
-  COMMAND &{CMAKE_COMMAND} -E copy_if_different
-)

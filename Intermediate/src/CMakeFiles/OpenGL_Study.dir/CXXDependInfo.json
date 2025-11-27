@@ -5,14 +5,26 @@
 	"compiler-simulate-id" : "",
 	"config" : "Debug",
 	"cxx-modules" : {},
-	"dir-cur-bld" : "H:/GithubRepository/OpenGL_StudyRep/Intermediate/src",
-	"dir-cur-src" : "H:/GithubRepository/OpenGL_StudyRep/src",
-	"dir-top-bld" : "H:/GithubRepository/OpenGL_StudyRep/Intermediate",
-	"dir-top-src" : "H:/GithubRepository/OpenGL_StudyRep",
+	"database-info" : null,
+	"dir-cur-bld" : "D:/GithubRepository/OpenGL/Intermediate/src",
+	"dir-cur-src" : "D:/GithubRepository/OpenGL/src",
+	"dir-top-bld" : "D:/GithubRepository/OpenGL/Intermediate",
+	"dir-top-src" : "D:/GithubRepository/OpenGL",
 	"exports" : [],
 	"forward-modules-from-target-dirs" : [],
-	"include-dirs" : [],
+	"include-dirs" : 
+	[
+		"D:\\GithubRepository\\OpenGL\\src\\ThirdParty\\header"
+	],
 	"language" : "CXX",
 	"linked-target-dirs" : [],
-	"module-dir" : "H:/GithubRepository/OpenGL_StudyRep/Intermediate/src/CMakeFiles/OpenGL_Study.dir"
+	"module-dir" : "D:/GithubRepository/OpenGL/Intermediate/src/CMakeFiles/OpenGL_Study.dir",
+	"sources" : 
+	{
+		"src/CMakeFiles/OpenGL_Study.dir/Main.cpp.obj" : 
+		{
+			"language" : "CXX",
+			"source" : "D:/GithubRepository/OpenGL/src/Main.cpp"
+		}
+	}
 }

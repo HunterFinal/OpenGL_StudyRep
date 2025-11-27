@@ -1,47 +1,66 @@
 {
   "tasks": [
-    {
-      "label": "(Debug)C/C++: g++ compile file",
-      "type": "shell",
-      "command": "I:\\MSYS2\\ucrt64\\bin\\g++.exe",
-      "args": [
-        "-fdiagnostics-color=always",
-        "-g",
-        "-std=c++23",
-        "-c",
-        "${file}",
-        "-o",
-        "${workspaceFolder}\\Intermediate\\Object\\${fileBasenameNoExtension}.o"
-      ],
-      "problemMatcher": [
-        "$gcc"
-      ]
-    },
-    {
-      "label": "(Debug)C/C++: g++ link file",
-      "type": "shell",
-      "dependsOn": "(Debug)C/C++: g++ compile file",
-      "command": "I:\\MSYS2\\ucrt64\\bin\\g++.exe",
-      "args": [
-        "${workspaceFolder}\\Intermediate\\Object\\${fileBasenameNoExtension}.o",
-        "-o",
-        "${workspaceFolder}\\Execution\\Debug\\${fileBasenameNoExtension}.exe",
-        "-std=c++23",
-        "-lstdc++exp"
-      ]
-    },
-    {
-      "type": "shell",
-      "label": "(Debug)C/C++: g++.exe build active file",
-      "dependsOn": [
-        "(Debug)C/C++: g++ compile file",
-        "(Debug)C/C++: g++ link file"
-      ],
-      "group": {
-        "kind": "build",
-        "isDefault": false
-      }
-    },
+    
+    // {
+    //   "label": "(Debug)C/C++: Generate build directories",
+    //   "type": "shell",
+    //   "windows":{
+    //     "command": "powershell",
+    //     "args": [
+    //       "-NoProfile",
+    //       "-Command",
+    //       "if (!(Test-Path '${workspaceFolder}\\Intermediate')) { New-Item '${workspaceFolder}\\Intermediate' -ItemType Directory }; ",
+    //       "if (!(Test-Path '${workspaceFolder}\\Intermediate\\Object')) { New-Item '${workspaceFolder}\\Intermediate\\Object' -ItemType Directory }; ",
+    //       "if (!(Test-Path '${workspaceFolder}\\Execution')) { New-Item '${workspaceFolder}\\Execution' -ItemType Directory }",
+    //       "if (!(Test-Path '${workspaceFolder}\\Execution\\Debug')) { New-Item '${workspaceFolder}\\Execution\\Debug' -ItemType Directory }",
+    //     ]
+    //   }
+      
+    // },
+
+    // {
+    //   "label": "(Debug)C/C++: g++ compile file",
+    //   "type": "shell",
+    //   "command": "D:\\MSYS2\\ucrt64\\bin\\g++.exe",
+    //   "args": [
+    //     "-fdiagnostics-color=always",
+    //     "-g",
+    //     "-std=c++23",
+    //     "-c",
+    //     "${file}",
+    //     "-o",
+    //     "${workspaceFolder}\\Intermediate\\Object\\${fileBasenameNoExtension}.o"
+    //   ],
+    //   "problemMatcher": [
+    //     "$gcc"
+    //   ]
+    // },
+    // {
+    //   "label": "(Debug)C/C++: g++ link file",
+    //   "type": "shell",
+    //   "dependsOn": "(Debug)C/C++: g++ compile file",
+    //   "command": "D:\\MSYS2\\ucrt64\\bin\\g++.exe",
+    //   "args": [
+    //     "${workspaceFolder}\\Intermediate\\Object\\${fileBasenameNoExtension}.o",
+    //     "-o",
+    //     "${workspaceFolder}\\Execution\\Debug\\${fileBasenameNoExtension}.exe",
+    //     "-std=c++23",
+    //     "-lstdc++exp"
+    //   ]
+    // },
+    // {
+    //   "type": "shell",
+    //   "label": "(Debug)C/C++: g++.exe build active file",
+    //   "dependsOn": [
+    //     "(Debug)C/C++: Generate build directories",
+    //     "(Debug)C/C++: g++ compile file",
+    //     "(Debug)C/C++: g++ link file"
+    //   ],
+    //   "group": {
+    //     "kind": "build",
+    //     "isDefault": false
+    //   }
+    // },
   ],
   "version": "2.0.0"
 }
