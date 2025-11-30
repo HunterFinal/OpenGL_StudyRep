@@ -11,9 +11,24 @@ add_executable(
   ${CMAKE_CURRENT_SOURCE_DIR}/Main.cpp
 )
 
+file(GLOB_RECURSE RENDER_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/Render/*.cpp")
+
+target_sources(
+  OpenGL_Study
+  PRIVATE
+  ${RENDER_SOURCES}
+)
+
 # glad
 add_library(glad
   ${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/src/glad/glad.c
+)
+
+# stb_image
+target_sources(
+  OpenGL_Study
+  PRIVATE
+  ${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/src/OpenGL_Study_stb_image.cpp
 )
 
 target_include_directories(
