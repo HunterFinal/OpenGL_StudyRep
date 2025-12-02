@@ -39,6 +39,8 @@ namespace OpenGLStudy
 
 namespace
 {
+  using OpenGLStudy::Runtime::Camera;
+
   static const char* WINDOW_TITLE = "LearnOpenGL";
   constexpr uint32_t WINDOW_WIDTH = 800;
   constexpr uint32_t WINDOW_HEIGHT = 600;
@@ -46,17 +48,20 @@ namespace
   constexpr float WINDOW_HEIGHTF = static_cast<float>(WINDOW_HEIGHT);
 
   static void framebuffer_size_callback(GLFWwindow*, /**width */GLsizei, /**height */GLsizei);
+  static void mouse_callback(GLFWwindow*, /**X */double, /**Y */double);
+  static void scroll_callback(GLFWwindow*, /**X */double, /**Y */double);
   static void pollGLFWEvent(GLFWwindow*);
   static void processInput(GLFWwindow*);
   static void updateTime();
   static constexpr glm::mat4 getProjectionMat();
+
+  static glm::mat4 LookAt(const Camera& InCamera, glm::vec3 TargetPos);
 
   constexpr uint8_t OPENGL_VERSION_MAJOR = 4;
   constexpr uint8_t OPENGL_VERSION_MINOR = 6;
 
   float g_LerpAlpha = 0.0f;
 
-  constexpr float g_FOV_DEG = 45.0f;
   constexpr float g_ASPECT_RATIO =  WINDOW_WIDTHF / 
                                     WINDOW_HEIGHTF;
 
@@ -65,11 +70,15 @@ namespace
 
   constexpr bool g_IS_ORTHO = false;
 
-  using OpenGLStudy::Runtime::Camera;
   Camera g_Camera;
 
   float g_DeltaTime = 0.0f;
   float g_LastFrameTime = 0.0f;
+
+  float g_mouseLastPosX = WINDOW_WIDTHF / 2.0f;
+  float g_mouseLastPosY = WINDOW_HEIGHTF / 2.0f;
+
+  bool g_firstMouse = true;
 }
 
 int main()
@@ -98,6 +107,11 @@ int main()
     std::println("Failed to initialize GLAD");
     return -1;
   }
+
+  // Hide cursor and capture mouse movement
+  glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+  glfwSetCursorPosCallback(window, mouse_callback);
+  glfwSetScrollCallback(window, scroll_callback);
 
   // Filp the y-axis during image loading
   stbi_set_flip_vertically_on_load(true);
@@ -393,6 +407,8 @@ int main()
     const float camX = std::sinf(deltaTime) * radius;
     const float camZ = std::cosf(deltaTime) * radius;
 
+    // NOTE Buggy
+    // const glm::mat4 view = LookAt(g_Camera, g_Camera.GetPosition() + g_Camera.GetForwardVector());
     const glm::mat4 view = glm::lookAt(g_Camera.GetPosition(), g_Camera.GetPosition() + g_Camera.GetForwardVector(), g_Camera.GetUpVector());
     const glm::mat4 projection = getProjectionMat();
 
@@ -431,6 +447,33 @@ namespace
   void framebuffer_size_callback(GLFWwindow* Window, GLsizei InWidth, GLsizei InHeight)
   {
     glViewport(0, 0, InWidth, InHeight);
+  }
+
+  void mouse_callback(GLFWwindow* Window, double X, double Y)
+  {
+    if (g_firstMouse)
+    {
+      g_mouseLastPosX = X;
+      g_mouseLastPosY = Y;
+      g_firstMouse = false; 
+    }
+
+    constexpr float sensitivity = 0.01f;
+    const float offsetX = (X - g_mouseLastPosX) * sensitivity;
+    const float offsetY = (g_mouseLastPosY - Y) * sensitivity;
+    
+    g_mouseLastPosX = X;
+    g_mouseLastPosY = Y;
+
+    g_Camera.UpdateCameraRotation(glm::vec3{offsetY, offsetX, 0.0f});
+  }
+
+  void scroll_callback(GLFWwindow* Window, double X, double Y)
+  {
+    (void)Window;
+    (void)X;
+
+    g_Camera.UpdateFOV((float)-Y);
   }
 
   void pollGLFWEvent(GLFWwindow* Window)
@@ -478,7 +521,7 @@ namespace
       cameraMove += cameraSpeed * glm::normalize(glm::cross(g_Camera.GetForwardVector(), g_Camera.GetUpVector()));
     }
 
-    g_Camera.UpdateCamera(std::move(cameraMove));
+    g_Camera.UpdateCameraPosition(std::move(cameraMove));
   }
 
   constexpr glm::mat4 getProjectionMat()
@@ -491,7 +534,7 @@ namespace
     }
     else
     {
-      projection = glm::perspective(glm::radians(g_FOV_DEG), g_ASPECT_RATIO, g_NEAR_CLIP, g_FAR_CLIP);
+      projection = glm::perspective(glm::radians(g_Camera.GetFOV()), g_ASPECT_RATIO, g_NEAR_CLIP, g_FAR_CLIP);
     }
 
     return projection;
@@ -503,5 +546,35 @@ namespace
     g_DeltaTime = glfwGetTime() - g_LastFrameTime;
     g_DeltaTime = std::clamp(g_DeltaTime, 0.0f, 0.005f); 
     g_LastFrameTime = glfwGetTime();
+  }
+
+  glm::mat4 LookAt(const Camera& InCamera, glm::vec3 TargetPos)
+  {
+    glm::mat4 lookAtMatLeft{1.0f};
+    glm::mat4 lookAtMatRight{1.0f};
+
+    const glm::vec3 cameraPos = InCamera.GetPosition();
+    const glm::vec3 direction = glm::normalize(TargetPos - cameraPos); // zaxis
+    const glm::vec3 cameraRight = glm::normalize(glm::cross(glm::vec3{0.0f, 1.0f, 0.0f}, direction)); // xaxis
+    const glm::vec3 lookAtUp = glm::normalize(glm::cross(cameraRight, direction)); // yaxis
+
+    lookAtMatLeft[0][0] = cameraRight.x;
+    lookAtMatLeft[1][0] = cameraRight.y;
+    lookAtMatLeft[2][0] = cameraRight.z;
+
+    lookAtMatLeft[0][1] = lookAtUp.x;
+    lookAtMatLeft[1][1] = lookAtUp.y;
+    lookAtMatLeft[2][1] = lookAtUp.z;
+
+    lookAtMatLeft[0][2] = direction.x;
+    lookAtMatLeft[1][2] = direction.y;
+    lookAtMatLeft[2][2] = direction.z;
+
+    lookAtMatRight[3][0] = -cameraPos.x;
+    lookAtMatRight[3][1] = -cameraPos.y;
+    lookAtMatRight[3][2] = -cameraPos.z;
+
+    return lookAtMatLeft * lookAtMatRight;
+
   }
 }
