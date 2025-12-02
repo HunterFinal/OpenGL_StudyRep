@@ -15,6 +15,7 @@
 #include <stb_image.h>
 
 #include "Render/GLSLShader.h"
+#include "Runtime/Camera.h"
 
 
 namespace OpenGLStudy
@@ -41,16 +42,34 @@ namespace
   static const char* WINDOW_TITLE = "LearnOpenGL";
   constexpr uint32_t WINDOW_WIDTH = 800;
   constexpr uint32_t WINDOW_HEIGHT = 600;
+  constexpr float WINDOW_WIDTHF = static_cast<float>(WINDOW_WIDTH);
+  constexpr float WINDOW_HEIGHTF = static_cast<float>(WINDOW_HEIGHT);
 
   static void framebuffer_size_callback(GLFWwindow*, /**width */GLsizei, /**height */GLsizei);
   static void pollGLFWEvent(GLFWwindow*);
-
   static void processInput(GLFWwindow*);
+  static void updateTime();
+  static constexpr glm::mat4 getProjectionMat();
 
   constexpr uint8_t OPENGL_VERSION_MAJOR = 4;
   constexpr uint8_t OPENGL_VERSION_MINOR = 6;
 
-  float LerpAlpha = 0.0f;
+  float g_LerpAlpha = 0.0f;
+
+  constexpr float g_FOV_DEG = 45.0f;
+  constexpr float g_ASPECT_RATIO =  WINDOW_WIDTHF / 
+                                    WINDOW_HEIGHTF;
+
+  constexpr float g_NEAR_CLIP = 0.1f;
+  constexpr float g_FAR_CLIP = 100.0f;
+
+  constexpr bool g_IS_ORTHO = false;
+
+  using OpenGLStudy::Runtime::Camera;
+  Camera g_Camera;
+
+  float g_DeltaTime = 0.0f;
+  float g_LastFrameTime = 0.0f;
 }
 
 int main()
@@ -102,6 +121,9 @@ int main()
   //   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
   //   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   // }
+
+  // Activate depth test
+  glEnable(GL_DEPTH_TEST);
 
   // Load image data
   using std::filesystem::absolute;
@@ -204,6 +226,63 @@ int main()
     1, 2, 3
   };
 
+  // Cube
+  const float vertices_cube[] =
+  {
+    -0.5f, -0.5f, -0.5f, 0.0f, 0.0f,
+    0.5f, -0.5f, -0.5f, 1.0f, 0.0f,
+    0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
+    0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
+    -0.5f, 0.5f, -0.5f, 0.0f, 1.0f,
+    -0.5f, -0.5f, -0.5f, 0.0f, 0.0f,
+    -0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
+    0.5f, -0.5f, 0.5f, 1.0f, 0.0f,
+    0.5f, 0.5f, 0.5f, 1.0f, 1.0f,
+    0.5f, 0.5f, 0.5f, 1.0f, 1.0f,
+    -0.5f, 0.5f, 0.5f, 0.0f, 1.0f,
+    -0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
+    -0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
+    -0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
+    -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
+    -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
+    -0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
+    -0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
+    0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
+    0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
+    0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
+    0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
+    0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
+    0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
+    -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
+    0.5f, -0.5f, -0.5f, 1.0f, 1.0f,
+    0.5f, -0.5f, 0.5f, 1.0f, 0.0f,
+    0.5f, -0.5f, 0.5f, 1.0f, 0.0f,
+    -0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
+    -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
+    -0.5f, 0.5f, -0.5f, 0.0f, 1.0f,
+    0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
+    0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
+    0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
+    -0.5f, 0.5f, 0.5f, 0.0f, 0.0f,
+    -0.5f, 0.5f, -0.5f, 0.0f, 1.0f
+  };
+
+  // Cube positions
+  glm::vec3 cubePositions[] = 
+  {
+    glm::vec3( 0.0f, 0.0f, 0.0f),
+    glm::vec3( 2.0f, 5.0f, -15.0f),
+    glm::vec3(-1.5f, -2.2f, -2.5f),
+    glm::vec3(-3.8f, -2.0f, -12.3f),
+    glm::vec3( 2.4f, -0.4f, -3.5f),
+    glm::vec3(-1.7f, 3.0f, -7.5f),
+    glm::vec3( 1.3f, -2.0f, -2.5f),
+    glm::vec3( 1.5f, 2.0f, -2.5f),
+    glm::vec3( 1.5f, 0.2f, -1.5f),
+    glm::vec3(-1.3f, 1.0f, -1.5f)
+  };
+
+
   // Use vertex buffer object to store vertices(OpenGL object)
   uint32_t VBO = 0;
   glGenBuffers(1, &VBO);
@@ -230,11 +309,11 @@ int main()
    *                  GL_STATIC_DRAW: The data is set only once and used many times
    *                  GL_DYNAMIC_DRAW: The data is changed a lot and used many times
    */
-  glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(vertices_cube), vertices_cube, GL_STATIC_DRAW);
 
   // // Copy index array in a element buffer for OpenGL use
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+  // glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+  // glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
   // Tell OpenGL how it should interpret vertex data
   /**
@@ -254,15 +333,15 @@ int main()
    */
 
   // Position attribute
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GL_NDCVector3), reinterpret_cast<void*>(0));
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), reinterpret_cast<void*>(0));
   glEnableVertexAttribArray(0);
 
   // Color attribute
-  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GL_NDCVector3), reinterpret_cast<void*>(sizeof(GL_NDCVector3)));
-  glEnableVertexAttribArray(1);
+  // glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), reinterpret_cast<void*>(sizeof(GL_NDCVector3)));
+  // glEnableVertexAttribArray(1);
 
   // Texture UV attribute
-  glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GL_NDCVector3), reinterpret_cast<void*>(2* sizeof(GL_NDCVector3)));
+  glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), reinterpret_cast<void*>(3 * sizeof(float)));
   glEnableVertexAttribArray(2);
 
   using std::filesystem::absolute;
@@ -276,23 +355,17 @@ int main()
   shaderProgram.SetInt("texture1", 0);
   shaderProgram.SetInt("texture2", 1);
 
-  const uint32_t transformLoc = glGetUniformLocation(shaderProgram.GetID(), "transformMatrix");
   
   while(!glfwWindowShouldClose(window))
   {
+    updateTime();
     processInput(window);
+
+    const float deltaTime = glfwGetTime();
 
     // Set background color
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
-
-      // Calculate transform matrix
-    glm::mat4 trans = glm::mat4{1.0f};
-
-    // S -> R -> T
-    trans = glm::rotate(trans, static_cast<float>(glfwGetTime()), glm::vec3{0.0f, 0.0f, 1.0f});
-    trans = glm::scale(trans, glm::vec3{2.0f, 1.2f, 2.0f});
-    glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans));
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, texture1);
@@ -300,7 +373,7 @@ int main()
     glBindTexture(GL_TEXTURE_2D, texture2);
 
     // Set lerp alpha
-    glUniform1f(glGetUniformLocation(shaderProgram.GetID(), "LerpAlpha"), LerpAlpha);
+    glUniform1f(glGetUniformLocation(shaderProgram.GetID(), "LerpAlpha"), g_LerpAlpha);
 
     // Render triangles
     glBindVertexArray(VAO);
@@ -313,7 +386,32 @@ int main()
      * 
      * @see glDrawElements()
      */
-    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+    // glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+    constexpr float radius = 10.0f;
+
+    const float camX = std::sinf(deltaTime) * radius;
+    const float camZ = std::cosf(deltaTime) * radius;
+
+    const glm::mat4 view = glm::lookAt(g_Camera.GetPosition(), g_Camera.GetPosition() + g_Camera.GetForwardVector(), g_Camera.GetUpVector());
+    const glm::mat4 projection = getProjectionMat();
+
+    for (uint32_t i = 0; i < sizeof(cubePositions) / sizeof(cubePositions[0]); ++i)
+    {
+      glm::mat4 model = glm::mat4{1.0f};
+      float angle = 20.0f * (float)i;
+      if (i % 3 == 0)
+      {
+        angle += (float)glfwGetTime() * 50.0f;
+      }
+      model = glm::translate(model, cubePositions[i]);
+      model = glm::rotate(model, glm::radians(angle), glm::vec3{1.0f, 0.3f, 0.5f});
+
+      shaderProgram.SetMat4("transformMatrix", projection * view * model);
+
+      glDrawArrays(GL_TRIANGLES, 0, 36);
+
+    }
 
     pollGLFWEvent(window);
     
@@ -350,12 +448,60 @@ namespace
 
     if (glfwGetKey(Window, GLFW_KEY_UP) == GLFW_PRESS)
     {
-      LerpAlpha = std::min(LerpAlpha + 0.01f, 1.0f);
+      g_LerpAlpha = std::min(g_LerpAlpha + 0.001f, 1.0f);
     }
 
     if (glfwGetKey(Window, GLFW_KEY_DOWN) == GLFW_PRESS)
     {
-      LerpAlpha = std::max(LerpAlpha - 0.01f, 0.0f);
+      g_LerpAlpha = std::max(g_LerpAlpha - 0.001f, 0.0f);
     }
+
+    glm::vec3 cameraMove{0.0f, 0.0f, 0.0f};
+    const float cameraSpeed = 2.5f * g_DeltaTime;
+    if (glfwGetKey(Window, GLFW_KEY_W) == GLFW_PRESS)
+    {
+      cameraMove += cameraSpeed * g_Camera.GetForwardVector();
+    }
+
+    if (glfwGetKey(Window, GLFW_KEY_S) == GLFW_PRESS)
+    {
+      cameraMove -= cameraSpeed * g_Camera.GetForwardVector();
+    }
+
+    if (glfwGetKey(Window, GLFW_KEY_A) == GLFW_PRESS)
+    {
+      cameraMove -= cameraSpeed * glm::normalize(glm::cross(g_Camera.GetForwardVector(), g_Camera.GetUpVector()));
+    }
+
+    if (glfwGetKey(Window, GLFW_KEY_D) == GLFW_PRESS)
+    {
+      cameraMove += cameraSpeed * glm::normalize(glm::cross(g_Camera.GetForwardVector(), g_Camera.GetUpVector()));
+    }
+
+    g_Camera.UpdateCamera(std::move(cameraMove));
+  }
+
+  constexpr glm::mat4 getProjectionMat()
+  {
+    glm::mat4 projection{};
+
+    if (g_IS_ORTHO)
+    {
+      projection = glm::ortho(0.0f, WINDOW_WIDTHF, 0.0f, WINDOW_HEIGHTF, g_NEAR_CLIP, g_FAR_CLIP);
+    }
+    else
+    {
+      projection = glm::perspective(glm::radians(g_FOV_DEG), g_ASPECT_RATIO, g_NEAR_CLIP, g_FAR_CLIP);
+    }
+
+    return projection;
+
+  }
+
+  void updateTime()
+  {
+    g_DeltaTime = glfwGetTime() - g_LastFrameTime;
+    g_DeltaTime = std::clamp(g_DeltaTime, 0.0f, 0.005f); 
+    g_LastFrameTime = glfwGetTime();
   }
 }

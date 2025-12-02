@@ -5,6 +5,7 @@
 
 #include <string>
 #include <cstdint>
+#include <glm/glm/fwd.hpp>
 
 namespace OpenGLStudy
 {
@@ -23,6 +24,7 @@ public:
   void SetBool(const std::string& propertyName, bool value) const;
   void SetFloat(const std::string& propertyName, float value) const;
   void SetInt(const std::string& propertyName, int32_t value) const;
+  void SetMat4(const std::string& propertyName, glm::mat4 value) const;
   uint32_t GetID() const { return m_shaderID; }
 
 private:

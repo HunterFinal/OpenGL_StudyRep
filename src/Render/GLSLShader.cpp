@@ -5,6 +5,8 @@
 #include <sstream>
 #include <iostream>
 #include <print>
+#include <glm/glm/mat4x4.hpp>
+#include <glm/glm/gtc/type_ptr.hpp>
 
 namespace OpenGLStudy
 {
@@ -134,6 +136,11 @@ namespace Render
   void GLSLShader::SetInt(const std::string& propertyName, int32_t value) const
   {
     glUniform1i(glGetUniformLocation(m_shaderID, propertyName.c_str()), value);
+  }
+
+  void GLSLShader::SetMat4(const std::string& propertyName, glm::mat4 value) const
+  {
+    glUniformMatrix4fv(glGetUniformLocation(m_shaderID, propertyName.c_str()), 1, GL_FALSE, &value[0][0]);
   }
 
 } // namespace OpenGLStudy::Render

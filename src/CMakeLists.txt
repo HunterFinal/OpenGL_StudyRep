@@ -12,11 +12,13 @@ add_executable(
 )
 
 file(GLOB_RECURSE RENDER_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/Render/*.cpp")
+file(GLOB_RECURSE RUNTIME_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/Runtime/*.cpp")
 
 target_sources(
   OpenGL_Study
   PRIVATE
   ${RENDER_SOURCES}
+  ${RUNTIME_SOURCES}
 )
 
 # glad
