@@ -138,6 +138,11 @@ namespace Render
     glUniform1i(glGetUniformLocation(m_shaderID, propertyName.c_str()), value);
   }
 
+  void GLSLShader::SetVec3(const std::string& propertyName, glm::vec3 value) const
+  {
+    glUniform3f(glGetUniformLocation(m_shaderID, propertyName.c_str()), value.x, value.y, value.z);
+  }
+
   void GLSLShader::SetMat4(const std::string& propertyName, glm::mat4 value) const
   {
     glUniformMatrix4fv(glGetUniformLocation(m_shaderID, propertyName.c_str()), 1, GL_FALSE, &value[0][0]);

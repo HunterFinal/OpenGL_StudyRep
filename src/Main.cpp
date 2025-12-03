@@ -79,6 +79,8 @@ namespace
   float g_mouseLastPosY = WINDOW_HEIGHTF / 2.0f;
 
   bool g_firstMouse = true;
+
+  constexpr glm::vec3 g_LIGHT_POS{1.2f, 1.0f, 2.0f};
 }
 
 int main()
@@ -117,10 +119,10 @@ int main()
   stbi_set_flip_vertically_on_load(true);
 
   // Set OpenGL polygon mode
-  {
-    // Wireframe mode
-    // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-  }
+  // {
+  //   Wireframe mode
+  //   glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+  // }
 
   // // Set Texture wrapping mode
   // {
@@ -243,76 +245,53 @@ int main()
   // Cube
   const float vertices_cube[] =
   {
-    -0.5f, -0.5f, -0.5f, 0.0f, 0.0f,
-    0.5f, -0.5f, -0.5f, 1.0f, 0.0f,
-    0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
-    0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
-    -0.5f, 0.5f, -0.5f, 0.0f, 1.0f,
-    -0.5f, -0.5f, -0.5f, 0.0f, 0.0f,
-    -0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
-    0.5f, -0.5f, 0.5f, 1.0f, 0.0f,
-    0.5f, 0.5f, 0.5f, 1.0f, 1.0f,
-    0.5f, 0.5f, 0.5f, 1.0f, 1.0f,
-    -0.5f, 0.5f, 0.5f, 0.0f, 1.0f,
-    -0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
-    -0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
-    -0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
-    -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
-    -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
-    -0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
-    -0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
-    0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
-    0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
-    0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
-    0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
-    0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
-    0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
-    -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
-    0.5f, -0.5f, -0.5f, 1.0f, 1.0f,
-    0.5f, -0.5f, 0.5f, 1.0f, 0.0f,
-    0.5f, -0.5f, 0.5f, 1.0f, 0.0f,
-    -0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
-    -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
-    -0.5f, 0.5f, -0.5f, 0.0f, 1.0f,
-    0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
-    0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
-    0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
-    -0.5f, 0.5f, 0.5f, 0.0f, 0.0f,
-    -0.5f, 0.5f, -0.5f, 0.0f, 1.0f
+    -0.5f, -0.5f, -0.5f,
+    0.5f, -0.5f, -0.5f,
+    0.5f, 0.5f, -0.5f, 
+    0.5f, 0.5f, -0.5f,
+    -0.5f, 0.5f, -0.5f,
+    -0.5f, -0.5f, -0.5f,
+    -0.5f, -0.5f, 0.5f,
+    0.5f, -0.5f, 0.5f,
+    0.5f, 0.5f, 0.5f,
+    0.5f, 0.5f, 0.5f,
+    -0.5f, 0.5f, 0.5f,
+    -0.5f, -0.5f, 0.5f,
+    -0.5f, 0.5f, 0.5f,
+    -0.5f, 0.5f, -0.5f,
+    -0.5f, -0.5f, -0.5f,
+    -0.5f, -0.5f, -0.5f,
+    -0.5f, -0.5f, 0.5f,
+    -0.5f, 0.5f, 0.5f,
+    0.5f, 0.5f, 0.5f,
+    0.5f, 0.5f, -0.5f,
+    0.5f, -0.5f, -0.5f,
+    0.5f, -0.5f, -0.5f,
+    0.5f, -0.5f, 0.5f,
+    0.5f, 0.5f, 0.5f,
+    -0.5f, -0.5f, -0.5f,
+    0.5f, -0.5f, -0.5f,
+    0.5f, -0.5f, 0.5f,
+    0.5f, -0.5f, 0.5f,
+    -0.5f, -0.5f, 0.5f,
+    -0.5f, -0.5f, -0.5f,
+    -0.5f, 0.5f, -0.5f,
+    0.5f, 0.5f, -0.5f,
+    0.5f, 0.5f, 0.5f,
+    0.5f, 0.5f, 0.5f,
+    -0.5f, 0.5f, 0.5f,
+    -0.5f, 0.5f, -0.5f,
   };
-
-  // Cube positions
-  glm::vec3 cubePositions[] = 
-  {
-    glm::vec3( 0.0f, 0.0f, 0.0f),
-    glm::vec3( 2.0f, 5.0f, -15.0f),
-    glm::vec3(-1.5f, -2.2f, -2.5f),
-    glm::vec3(-3.8f, -2.0f, -12.3f),
-    glm::vec3( 2.4f, -0.4f, -3.5f),
-    glm::vec3(-1.7f, 3.0f, -7.5f),
-    glm::vec3( 1.3f, -2.0f, -2.5f),
-    glm::vec3( 1.5f, 2.0f, -2.5f),
-    glm::vec3( 1.5f, 0.2f, -1.5f),
-    glm::vec3(-1.3f, 1.0f, -1.5f)
-  };
-
 
   // Use vertex buffer object to store vertices(OpenGL object)
   uint32_t VBO = 0;
   glGenBuffers(1, &VBO);
-
   // Generate vertex array object(OpenGL object)
   uint32_t VAO;
   glGenVertexArrays(1, &VAO);
-
-  // Generate element buffer object
-  uint32_t EBO;
-  glGenBuffers(1, &EBO);
-
-  // bind vertex array object;
-  glBindVertexArray(VAO);
-
+  
   glBindBuffer(GL_ARRAY_BUFFER, VBO);
+  
   /**
    * Copy user-defined data into the currently bound buffer
    * First argument: Type of buffer
@@ -324,7 +303,8 @@ int main()
    *                  GL_DYNAMIC_DRAW: The data is changed a lot and used many times
    */
   glBufferData(GL_ARRAY_BUFFER, sizeof(vertices_cube), vertices_cube, GL_STATIC_DRAW);
-
+  glBindVertexArray(VAO);
+  
   // // Copy index array in a element buffer for OpenGL use
   // glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
   // glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
@@ -347,7 +327,7 @@ int main()
    */
 
   // Position attribute
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), reinterpret_cast<void*>(0));
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), reinterpret_cast<void*>(0));
   glEnableVertexAttribArray(0);
 
   // Color attribute
@@ -355,21 +335,32 @@ int main()
   // glEnableVertexAttribArray(1);
 
   // Texture UV attribute
-  glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), reinterpret_cast<void*>(3 * sizeof(float)));
-  glEnableVertexAttribArray(2);
+  // glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), reinterpret_cast<void*>(3 * sizeof(float)));
+  // glEnableVertexAttribArray(2);
+
+  // Generate light VAO
+  uint32_t lightVAO;
+  glGenVertexArrays(1, &lightVAO);
+  glBindVertexArray(lightVAO);
+
+  // We only need to bind to the VBO, no need to fill it
+  glBindBuffer(GL_ARRAY_BUFFER, VBO);
+
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), reinterpret_cast<void*>(0));
+  glEnableVertexAttribArray(0);
 
   using std::filesystem::absolute;
   OpenGLStudy::Render::GLSLShader shaderProgram{
     absolute("../resource/Shader/shader.vs").string(), 
     absolute("../resource/Shader/shader.fs").string()
   };
-        
-  // Active shader program
-  shaderProgram.Activate();
-  shaderProgram.SetInt("texture1", 0);
-  shaderProgram.SetInt("texture2", 1);
 
-  
+  OpenGLStudy::Render::GLSLShader lightProgram
+  {
+    absolute("../resource/Shader/lightShader.vs").string(), 
+    absolute("../resource/Shader/lightShader.fs").string()  
+  };
+
   while(!glfwWindowShouldClose(window))
   {
     updateTime();
@@ -378,19 +369,10 @@ int main()
     const float deltaTime = glfwGetTime();
 
     // Set background color
-    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+    glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, texture1);
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, texture2);
-
-    // Set lerp alpha
-    glUniform1f(glGetUniformLocation(shaderProgram.GetID(), "LerpAlpha"), g_LerpAlpha);
-
     // Render triangles
-    glBindVertexArray(VAO);
     /**
      * First argument: Specifies the mode we want to draw in(Similar to glDrawArrays)
      * Second argument: Count or number of elements we'd like to draw
@@ -401,41 +383,36 @@ int main()
      * @see glDrawElements()
      */
     // glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-
-    constexpr float radius = 10.0f;
-
-    const float camX = std::sinf(deltaTime) * radius;
-    const float camZ = std::cosf(deltaTime) * radius;
-
+    
     // NOTE Buggy
     // const glm::mat4 view = LookAt(g_Camera, g_Camera.GetPosition() + g_Camera.GetForwardVector());
     const glm::mat4 view = glm::lookAt(g_Camera.GetPosition(), g_Camera.GetPosition() + g_Camera.GetForwardVector(), g_Camera.GetUpVector());
     const glm::mat4 projection = getProjectionMat();
+    
+    shaderProgram.Activate();
+    shaderProgram.SetVec3("objectColor", glm::vec3{1.0f, 0.5f, 0.31f});
+    shaderProgram.SetVec3("lightColor", glm::vec3{1.0f, 1.0f, 1.0f});
+    glm::mat4 model = glm::mat4{1.0f};
+    shaderProgram.SetMat4("transformMatrix", projection * view * model);
+    glBindVertexArray(VAO);
+    glDrawArrays(GL_TRIANGLES, 0, 36);
 
-    for (uint32_t i = 0; i < sizeof(cubePositions) / sizeof(cubePositions[0]); ++i)
-    {
-      glm::mat4 model = glm::mat4{1.0f};
-      float angle = 20.0f * (float)i;
-      if (i % 3 == 0)
-      {
-        angle += (float)glfwGetTime() * 50.0f;
-      }
-      model = glm::translate(model, cubePositions[i]);
-      model = glm::rotate(model, glm::radians(angle), glm::vec3{1.0f, 0.3f, 0.5f});
+    // Active light program
+    lightProgram.Activate();
+    model = glm::translate(model, g_LIGHT_POS);
+    model = glm::scale(model, glm::vec3{0.2f});
+    lightProgram.SetMat4("transformMatrix", projection * view * model);
 
-      shaderProgram.SetMat4("transformMatrix", projection * view * model);
-
-      glDrawArrays(GL_TRIANGLES, 0, 36);
-
-    }
+    glBindVertexArray(lightVAO);
+    glDrawArrays(GL_TRIANGLES, 0, 36);
 
     pollGLFWEvent(window);
     
   }
 
   glDeleteVertexArrays(1, &VAO);
+  glDeleteVertexArrays(1, &lightVAO);
   glDeleteBuffers(1, &VBO);
-  glDeleteBuffers(1, &EBO);
 
   glfwTerminate();
 
