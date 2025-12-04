@@ -80,7 +80,7 @@ namespace
 
   bool g_firstMouse = true;
 
-  constexpr glm::vec3 g_LIGHT_POS{1.2f, 1.0f, 2.0f};
+  constexpr glm::vec3 g_LIGHT_POS{0.0f, 1.0f, 0.0f};
 }
 
 int main()
@@ -245,43 +245,43 @@ int main()
   // Cube
   const float vertices_cube[] =
   {
-    -0.5f, -0.5f, -0.5f,
-    0.5f, -0.5f, -0.5f,
-    0.5f, 0.5f, -0.5f, 
-    0.5f, 0.5f, -0.5f,
-    -0.5f, 0.5f, -0.5f,
-    -0.5f, -0.5f, -0.5f,
-    -0.5f, -0.5f, 0.5f,
-    0.5f, -0.5f, 0.5f,
-    0.5f, 0.5f, 0.5f,
-    0.5f, 0.5f, 0.5f,
-    -0.5f, 0.5f, 0.5f,
-    -0.5f, -0.5f, 0.5f,
-    -0.5f, 0.5f, 0.5f,
-    -0.5f, 0.5f, -0.5f,
-    -0.5f, -0.5f, -0.5f,
-    -0.5f, -0.5f, -0.5f,
-    -0.5f, -0.5f, 0.5f,
-    -0.5f, 0.5f, 0.5f,
-    0.5f, 0.5f, 0.5f,
-    0.5f, 0.5f, -0.5f,
-    0.5f, -0.5f, -0.5f,
-    0.5f, -0.5f, -0.5f,
-    0.5f, -0.5f, 0.5f,
-    0.5f, 0.5f, 0.5f,
-    -0.5f, -0.5f, -0.5f,
-    0.5f, -0.5f, -0.5f,
-    0.5f, -0.5f, 0.5f,
-    0.5f, -0.5f, 0.5f,
-    -0.5f, -0.5f, 0.5f,
-    -0.5f, -0.5f, -0.5f,
-    -0.5f, 0.5f, -0.5f,
-    0.5f, 0.5f, -0.5f,
-    0.5f, 0.5f, 0.5f,
-    0.5f, 0.5f, 0.5f,
-    -0.5f, 0.5f, 0.5f,
-    -0.5f, 0.5f, -0.5f,
-  };
+    -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f,
+    0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f, 1.0f, 0.0f,
+    0.5f, 0.5f, -0.5f, 0.0f, 0.0f, -1.0f, 1.0f, 1.0f,
+    0.5f, 0.5f, -0.5f, 0.0f, 0.0f, -1.0f, 1.0f, 1.0f,
+    -0.5f, 0.5f, -0.5f, 0.0f, 0.0f, -1.0f, 0.0f, 1.0f,
+    -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f,
+    -0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
+    0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f,
+    0.5f, 0.5f, 0.5f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f,
+    0.5f, 0.5f, 0.5f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f,
+    -0.5f, 0.5f, 0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f,
+    -0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
+    -0.5f, 0.5f, 0.5f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f,
+    -0.5f, 0.5f, -0.5f, -1.0f, 0.0f, 0.0f, 1.0f, 1.0f,
+    -0.5f, -0.5f, -0.5f, -1.0f, 0.0f, 0.0f, 0.0f, 1.0f,
+    -0.5f, -0.5f, -0.5f, -1.0f, 0.0f, 0.0f, 0.0f, 1.0f,
+    -0.5f, -0.5f, 0.5f, -1.0f, 0.0f, 0.0f, 0.0f, 0.0f,
+    -0.5f, 0.5f, 0.5f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f,
+    0.5f, 0.5f, 0.5f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f,
+    0.5f, 0.5f, -0.5f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f,
+    0.5f, -0.5f, -0.5f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f,
+    0.5f, -0.5f, -0.5f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f,
+    0.5f, -0.5f, 0.5f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f,
+    0.5f, 0.5f, 0.5f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f,
+    -0.5f, -0.5f, -0.5f, 0.0f, -1.0f, 0.0f, 0.0f, 1.0f,
+    0.5f, -0.5f, -0.5f, 0.0f, -1.0f, 0.0f, 1.0f, 1.0f,
+    0.5f, -0.5f, 0.5f, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f,
+    0.5f, -0.5f, 0.5f, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f,
+    -0.5f, -0.5f, 0.5f, 0.0f, -1.0f, 0.0f, 0.0f, 0.0f,
+    -0.5f, -0.5f, -0.5f, 0.0f, -1.0f, 0.0f, 0.0f, 1.0f,
+    -0.5f, 0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f,
+    0.5f, 0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f,
+    0.5f, 0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f,
+    0.5f, 0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f,
+    -0.5f, 0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f,
+    -0.5f, 0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f
+};
 
   // Use vertex buffer object to store vertices(OpenGL object)
   uint32_t VBO = 0;
@@ -303,12 +303,11 @@ int main()
    *                  GL_DYNAMIC_DRAW: The data is changed a lot and used many times
    */
   glBufferData(GL_ARRAY_BUFFER, sizeof(vertices_cube), vertices_cube, GL_STATIC_DRAW);
-  glBindVertexArray(VAO);
   
   // // Copy index array in a element buffer for OpenGL use
   // glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
   // glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-
+  
   // Tell OpenGL how it should interpret vertex data
   /**
    * // NOTE layout (location = 0)
@@ -325,14 +324,15 @@ int main()
    * // FIXME Explore this in more detail later
    * Sixth argument: Offset of where the position data begins.
    */
-
-  // Position attribute
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), reinterpret_cast<void*>(0));
+  
+  glBindVertexArray(VAO);
+  // Position attribute(VAO)
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), reinterpret_cast<void*>(0));
   glEnableVertexAttribArray(0);
 
-  // Color attribute
-  // glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), reinterpret_cast<void*>(sizeof(GL_NDCVector3)));
-  // glEnableVertexAttribArray(1);
+  // Normal attribute
+  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), reinterpret_cast<void*>(3 * sizeof(float)));
+  glEnableVertexAttribArray(1);
 
   // Texture UV attribute
   // glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), reinterpret_cast<void*>(3 * sizeof(float)));
@@ -346,7 +346,7 @@ int main()
   // We only need to bind to the VBO, no need to fill it
   glBindBuffer(GL_ARRAY_BUFFER, VBO);
 
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), reinterpret_cast<void*>(0));
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), reinterpret_cast<void*>(0));
   glEnableVertexAttribArray(0);
 
   using std::filesystem::absolute;
@@ -365,8 +365,6 @@ int main()
   {
     updateTime();
     processInput(window);
-
-    const float deltaTime = glfwGetTime();
 
     // Set background color
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
@@ -388,18 +386,30 @@ int main()
     // const glm::mat4 view = LookAt(g_Camera, g_Camera.GetPosition() + g_Camera.GetForwardVector());
     const glm::mat4 view = glm::lookAt(g_Camera.GetPosition(), g_Camera.GetPosition() + g_Camera.GetForwardVector(), g_Camera.GetUpVector());
     const glm::mat4 projection = getProjectionMat();
-    
+
+    const float lightMoveRadius = 2.0f;
+    const float newLightX = std::cosf(glfwGetTime()) * lightMoveRadius;
+    const float newLightZ = std::sinf(glfwGetTime()) * lightMoveRadius;
+
+    const glm::vec3 lightPos = g_LIGHT_POS + glm::vec3{newLightX, 0.0f, newLightZ};
+  
     shaderProgram.Activate();
     shaderProgram.SetVec3("objectColor", glm::vec3{1.0f, 0.5f, 0.31f});
     shaderProgram.SetVec3("lightColor", glm::vec3{1.0f, 1.0f, 1.0f});
+    shaderProgram.SetVec3("lightPos", lightPos);
+    shaderProgram.SetVec3("viewPos", g_Camera.GetPosition());
     glm::mat4 model = glm::mat4{1.0f};
-    shaderProgram.SetMat4("transformMatrix", projection * view * model);
+    shaderProgram.SetMat4("projection", projection);
+    shaderProgram.SetMat4("view", view);
+    shaderProgram.SetMat4("model", model);
+    const glm::mat4 normalMat = glm::transpose(glm::inverse(model));
+    shaderProgram.SetMat4("normalMatrix", normalMat);
     glBindVertexArray(VAO);
     glDrawArrays(GL_TRIANGLES, 0, 36);
 
     // Active light program
     lightProgram.Activate();
-    model = glm::translate(model, g_LIGHT_POS);
+    model = glm::translate(model, lightPos);
     model = glm::scale(model, glm::vec3{0.2f});
     lightProgram.SetMat4("transformMatrix", projection * view * model);
 
