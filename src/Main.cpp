@@ -80,7 +80,7 @@ namespace
 
   bool g_firstMouse = true;
 
-  constexpr glm::vec3 g_LIGHT_POS{0.0f, 1.0f, 0.0f};
+  constexpr glm::vec3 g_LIGHT_POS{1.2f, 1.0f, 2.0f};
 }
 
 int main()
@@ -145,7 +145,7 @@ int main()
   using std::filesystem::absolute;
   int width, height, nrChannels;
   uint8_t* data = stbi_load(
-    absolute("../resource/Textures/container.jpg").string().c_str(),
+    absolute("../resource/Textures/container2.png").string().c_str(),
     &width,
     &height,
     &nrChannels,
@@ -180,43 +180,9 @@ int main()
    */
   if (data != nullptr)
   {
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, reinterpret_cast<void*>(data));
-
-    // Call this to generate all the required mipmaps for the currently bound texture automatically
-    glGenerateMipmap(GL_TEXTURE_2D);
-  }
-  else
-  {
-    std::println("Failed to load texture(.jpg)");
-  }
-
-  // Release image data
-  stbi_image_free(data);
-
-  uint32_t texture2;
-  glGenTextures(1, &texture2);
-  glBindTexture(GL_TEXTURE_2D, texture2);
-  {
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-  }
-
-  // Load another image
-  data = stbi_load(
-    absolute("../resource/Textures/awesomeface.png").string().c_str(),
-    &width,
-    &height,
-    &nrChannels,
-    0
-  );
-
-  if (data != nullptr)
-  {
-    // .png contains an alpha channel
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, reinterpret_cast<void*>(data));
 
+    // Call this to generate all the required mipmaps for the currently bound texture automatically
     glGenerateMipmap(GL_TEXTURE_2D);
   }
   else
@@ -224,23 +190,41 @@ int main()
     std::println("Failed to load texture(.png)");
   }
 
-  // Initialize triangle
+  // Release image data
+  stbi_image_free(data);
 
-  // Vertices
-  const GL_NDCVector3 vertices[] =
+  // Load specular map
+  data = stbi_load(
+    absolute("../resource/Textures/container2_specular.png").string().c_str(),
+    &width,
+    &height,
+    &nrChannels,
+    0
+  );
+  uint32_t specularMap;
+  glGenTextures(1, &specularMap);
+  glBindTexture(GL_TEXTURE_2D, specularMap);
   {
-    { 0.5f,  0.5f, 0.0f}, {1.0f, 0.0f, 0.0f}, {1.0f, 1.0f, 1.0f},
-    { 0.5f, -0.5f, 0.0f}, {0.0f, 1.0f, 0.0f}, {1.0f, 0.0f, 1.0f},
-    {-0.5f, -0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}, {0.0f, 0.0f, 1.0f},
-    {-0.5f,  0.5f, 0.0f}, {1.0f, 1.0f, 0.0f}, {0.0f, 1.0f, 0.0f}
-  };
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  }
 
-  // Indices
-  const uint32_t indices[] =
+  if (data != nullptr)
   {
-    0, 1, 3,
-    1, 2, 3
-  };
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, reinterpret_cast<void*>(data));
+
+    // Call this to generate all the required mipmaps for the currently bound texture automatically
+    glGenerateMipmap(GL_TEXTURE_2D);
+  }
+  else
+  {
+    std::println("Failed to load texture(.png)");
+  }
+
+  // Release image data
+  stbi_image_free(data);
 
   // Cube
   const float vertices_cube[] =
@@ -335,8 +319,8 @@ int main()
   glEnableVertexAttribArray(1);
 
   // Texture UV attribute
-  // glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), reinterpret_cast<void*>(3 * sizeof(float)));
-  // glEnableVertexAttribArray(2);
+  glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), reinterpret_cast<void*>(6 * sizeof(float)));
+  glEnableVertexAttribArray(2);
 
   // Generate light VAO
   uint32_t lightVAO;
@@ -360,6 +344,10 @@ int main()
     absolute("../resource/Shader/lightShader.vs").string(), 
     absolute("../resource/Shader/lightShader.fs").string()  
   };
+
+  shaderProgram.Activate();
+  shaderProgram.SetInt("material.diffuse", 0);
+  shaderProgram.SetInt("material.specular", 1);
 
   while(!glfwWindowShouldClose(window))
   {
@@ -386,35 +374,44 @@ int main()
     // const glm::mat4 view = LookAt(g_Camera, g_Camera.GetPosition() + g_Camera.GetForwardVector());
     const glm::mat4 view = glm::lookAt(g_Camera.GetPosition(), g_Camera.GetPosition() + g_Camera.GetForwardVector(), g_Camera.GetUpVector());
     const glm::mat4 projection = getProjectionMat();
-
-    const float lightMoveRadius = 2.0f;
-    const float newLightX = std::cosf(glfwGetTime()) * lightMoveRadius;
-    const float newLightZ = std::sinf(glfwGetTime()) * lightMoveRadius;
-
-    const glm::vec3 lightPos = g_LIGHT_POS + glm::vec3{newLightX, 0.0f, newLightZ};
+    const glm::vec3 lightPos = g_LIGHT_POS;
   
-    shaderProgram.Activate();
-    shaderProgram.SetVec3("objectColor", glm::vec3{1.0f, 0.5f, 0.31f});
-    shaderProgram.SetVec3("lightColor", glm::vec3{1.0f, 1.0f, 1.0f});
-    shaderProgram.SetVec3("lightPos", lightPos);
-    shaderProgram.SetVec3("viewPos", g_Camera.GetPosition());
-    glm::mat4 model = glm::mat4{1.0f};
-    shaderProgram.SetMat4("projection", projection);
-    shaderProgram.SetMat4("view", view);
-    shaderProgram.SetMat4("model", model);
-    const glm::mat4 normalMat = glm::transpose(glm::inverse(model));
-    shaderProgram.SetMat4("normalMatrix", normalMat);
-    glBindVertexArray(VAO);
-    glDrawArrays(GL_TRIANGLES, 0, 36);
+    {
+      shaderProgram.Activate();
+
+      shaderProgram.SetFloat("material.shininess", 32.0f);
+      shaderProgram.SetVec3("light.ambient", glm::vec3{0.2f});
+      shaderProgram.SetVec3("light.diffuse", glm::vec3{0.5f});
+      shaderProgram.SetVec3("light.specular", glm::vec3{1.0f});
+      shaderProgram.SetVec3("lightPos", lightPos);
+      shaderProgram.SetVec3("viewPos", g_Camera.GetPosition());
+      const glm::mat4 model = glm::mat4{1.0f};
+      shaderProgram.SetMat4("projection", projection);
+      shaderProgram.SetMat4("view", view);
+      shaderProgram.SetMat4("model", model);
+      const glm::mat4 normalMat = glm::transpose(glm::inverse(model));
+      shaderProgram.SetMat4("normalMatrix", normalMat);
+    
+      glActiveTexture(GL_TEXTURE0);
+      glBindTexture(GL_TEXTURE_2D, texture1);
+      glActiveTexture(GL_TEXTURE1);
+      glBindTexture(GL_TEXTURE_2D, specularMap);
+  
+      glBindVertexArray(VAO);
+      glDrawArrays(GL_TRIANGLES, 0, 36);
+    }
 
     // Active light program
-    lightProgram.Activate();
-    model = glm::translate(model, lightPos);
-    model = glm::scale(model, glm::vec3{0.2f});
-    lightProgram.SetMat4("transformMatrix", projection * view * model);
-
-    glBindVertexArray(lightVAO);
-    glDrawArrays(GL_TRIANGLES, 0, 36);
+    {
+      lightProgram.Activate();
+      glm::mat4 model = glm::mat4{1.0f};
+      model = glm::translate(model, lightPos);
+      model = glm::scale(model, glm::vec3{0.2f});
+      lightProgram.SetMat4("transformMatrix", projection * view * model);
+  
+      glBindVertexArray(lightVAO);
+      glDrawArrays(GL_TRIANGLES, 0, 36);
+    }
 
     pollGLFWEvent(window);
     
