@@ -265,7 +265,28 @@ int main()
     0.5f, 0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f,
     -0.5f, 0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f,
     -0.5f, 0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f
-};
+  };
+
+  const glm::vec3 cubePositions[] = {
+    glm::vec3( 0.0f, 0.0f, 0.0f),
+    glm::vec3( 2.0f, 5.0f, -15.0f),
+    glm::vec3(-1.5f, -2.2f, -2.5f),
+    glm::vec3(-3.8f, -2.0f, -12.3f),
+    glm::vec3( 2.4f, -0.4f, -3.5f),
+    glm::vec3(-1.7f, 3.0f, -7.5f),
+    glm::vec3( 1.3f, -2.0f, -2.5f),
+    glm::vec3( 1.5f, 2.0f, -2.5f),
+    glm::vec3( 1.5f, 0.2f, -1.5f),
+    glm::vec3(-1.3f, 1.0f, -1.5f)
+  };
+
+  const glm::vec3 pointLightPositions[] = 
+  {
+    glm::vec3{0.7f, 0.2f, 2.0f},
+    glm::vec3{2.3f, -3.3f, -4.0f},
+    glm::vec3{-4.0f, 2.0f, -12.0f},
+    glm::vec3{0.0f, 0.0f, -3.0f}
+  };
 
   // Use vertex buffer object to store vertices(OpenGL object)
   uint32_t VBO = 0;
@@ -380,37 +401,97 @@ int main()
       shaderProgram.Activate();
 
       shaderProgram.SetFloat("material.shininess", 32.0f);
-      shaderProgram.SetVec3("light.ambient", glm::vec3{0.2f});
-      shaderProgram.SetVec3("light.diffuse", glm::vec3{0.5f});
-      shaderProgram.SetVec3("light.specular", glm::vec3{1.0f});
-      shaderProgram.SetVec3("lightPos", lightPos);
+      // Directional light
+      shaderProgram.SetVec3("sunLight.ambient", glm::vec3{0.2f});
+      shaderProgram.SetVec3("sunLight.diffuse", glm::vec3{0.5f});
+      shaderProgram.SetVec3("sunLight.specular", glm::vec3{1.0f});
+      shaderProgram.SetVec3("sunLight.direction", glm::vec3{-0.2f, -1.0f, -0.3f});
+
+      // Point light
+      {
+        shaderProgram.SetVec3("pointLights[0].ambient", glm::vec3{0.2f});
+        shaderProgram.SetVec3("pointLights[0].diffuse", glm::vec3{0.5f});
+        shaderProgram.SetVec3("pointLights[0].specular", glm::vec3{1.0f});
+        shaderProgram.SetFloat("pointLights[0].constant", 1.0f);
+        shaderProgram.SetFloat("pointLights[0].linear", 0.09f);
+        shaderProgram.SetFloat("pointLights[0].quadratic", 0.032f);
+
+        shaderProgram.SetVec3("pointLights[1].ambient", glm::vec3{0.2f});
+        shaderProgram.SetVec3("pointLights[1].diffuse", glm::vec3{0.5f});
+        shaderProgram.SetVec3("pointLights[1].specular", glm::vec3{1.0f});
+        shaderProgram.SetFloat("pointLights[1].constant", 1.0f);
+        shaderProgram.SetFloat("pointLights[1].linear", 0.09f);
+        shaderProgram.SetFloat("pointLights[1].quadratic", 0.032f);
+
+        shaderProgram.SetVec3("pointLights[2].ambient", glm::vec3{0.2f});
+        shaderProgram.SetVec3("pointLights[2].diffuse", glm::vec3{0.5f});
+        shaderProgram.SetVec3("pointLights[2].specular", glm::vec3{1.0f});
+        shaderProgram.SetFloat("pointLights[2].constant", 1.0f);
+        shaderProgram.SetFloat("pointLights[2].linear", 0.09f);
+        shaderProgram.SetFloat("pointLights[2].quadratic", 0.032f);
+
+        shaderProgram.SetVec3("pointLights[3].ambient", glm::vec3{0.2f});
+        shaderProgram.SetVec3("pointLights[3].diffuse", glm::vec3{0.5f});
+        shaderProgram.SetVec3("pointLights[3].specular", glm::vec3{1.0f});
+        shaderProgram.SetFloat("pointLights[3].constant", 1.0f);
+        shaderProgram.SetFloat("pointLights[3].linear", 0.09f);
+        shaderProgram.SetFloat("pointLights[3].quadratic", 0.032f);
+
+      }
+
+      // Spot light
+      shaderProgram.SetVec3("flashLight.position", g_Camera.GetPosition());
+      shaderProgram.SetVec3("flashLight.direction", g_Camera.GetForwardVector());
+      shaderProgram.SetFloat("flashLight.cutOff", std::cosf(glm::radians(12.5f)));
+      shaderProgram.SetFloat("flashLight.outerCutOff", std::cosf(glm::radians(17.5f)));
+      shaderProgram.SetVec3("flashLight.ambient", glm::vec3{0.2f});
+      shaderProgram.SetVec3("flashLight.diffuse", glm::vec3{0.5f});
+      shaderProgram.SetVec3("flashLight.specular", glm::vec3{1.0f});
+      shaderProgram.SetFloat("flashLight.constant", 1.0f);
+      shaderProgram.SetFloat("flashLight.linear", 0.09f);
+      shaderProgram.SetFloat("flashLight.quadratic", 0.032f);
+
       shaderProgram.SetVec3("viewPos", g_Camera.GetPosition());
-      const glm::mat4 model = glm::mat4{1.0f};
       shaderProgram.SetMat4("projection", projection);
       shaderProgram.SetMat4("view", view);
-      shaderProgram.SetMat4("model", model);
-      const glm::mat4 normalMat = glm::transpose(glm::inverse(model));
-      shaderProgram.SetMat4("normalMatrix", normalMat);
-    
+
+      shaderProgram.SetMat4("model", glm::mat4{1.0f});
       glActiveTexture(GL_TEXTURE0);
       glBindTexture(GL_TEXTURE_2D, texture1);
       glActiveTexture(GL_TEXTURE1);
       glBindTexture(GL_TEXTURE_2D, specularMap);
   
       glBindVertexArray(VAO);
-      glDrawArrays(GL_TRIANGLES, 0, 36);
+
+      for (uint32_t i = 0; i < sizeof(cubePositions)/ sizeof(cubePositions[0]); ++i)
+      {
+        glm::mat4 model = glm::mat4{1.0f};
+        const float angle = 20.0f * (float)i;
+        
+        model = glm::translate(model, cubePositions[i]);
+        model = glm::rotate(model, glm::radians(angle), glm::vec3{1.0f, 0.3f, 0.5f});
+        const glm::mat4 normalMat = glm::transpose(glm::inverse(model));
+        shaderProgram.SetMat4("model", model);
+        shaderProgram.SetMat4("normalMatrix", normalMat);
+      
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+      }
     }
 
     // Active light program
     {
       lightProgram.Activate();
-      glm::mat4 model = glm::mat4{1.0f};
-      model = glm::translate(model, lightPos);
-      model = glm::scale(model, glm::vec3{0.2f});
-      lightProgram.SetMat4("transformMatrix", projection * view * model);
-  
       glBindVertexArray(lightVAO);
-      glDrawArrays(GL_TRIANGLES, 0, 36);
+
+      for (size_t i = 0; i < sizeof(pointLightPositions)/ sizeof(pointLightPositions[0]); ++i)
+      {
+        glm::mat4 model = glm::mat4{1.0f};
+        model = glm::translate(model, pointLightPositions[i]);
+        model = glm::scale(model, glm::vec3{0.2f});
+        lightProgram.SetMat4("transformMatrix", projection * view * model);
+    
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+      }
     }
 
     pollGLFWEvent(window);
