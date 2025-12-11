@@ -15,6 +15,7 @@
 #include <stb_image.h>
 
 #include "Render/GLSLShader.h"
+#include "Render/Model.h"
 #include "Runtime/Camera.h"
 
 
@@ -141,219 +142,6 @@ int main()
   // Activate depth test
   glEnable(GL_DEPTH_TEST);
 
-  // Load image data
-  using std::filesystem::absolute;
-  int width, height, nrChannels;
-  uint8_t* data = stbi_load(
-    absolute("../resource/Textures/container2.png").string().c_str(),
-    &width,
-    &height,
-    &nrChannels,
-    0
-  );
-
-  // Generate texture object(OpenGL object)
-  uint32_t texture1;
-  glGenTextures(1, &texture1);
-  glBindTexture(GL_TEXTURE_2D, texture1);
-  {
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-  }
-
-  // Generate texture
-  /**
-   * // NOTE GL_TEXTURE_2D means this operation will generate a texture on the currently bound texture object at the same target
-   * First argument: Specifies texture target
-   * // NOTE For which we want to create a texture for if you want to set eacn mipmap level manually.
-   * Second argument: Specifies the mipmap level
-   * // NOTE Our image has only RGB values
-   * Third argument: Tells OpenGL in what kind of format we want to store the texture
-   * Fourth/Fifth argument: Width tand height of the resulting texture
-   * // NOTE Some legacy stuff
-   * Six argument: Should always be 0
-   * // NOTE Loaded image with RGB values and stored them as chars(unsigne byte)
-   * Seventh/Eighth argument: Specify the format and datatype of the source image
-   * Ninth argument: Actual image data
-   */
-  if (data != nullptr)
-  {
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, reinterpret_cast<void*>(data));
-
-    // Call this to generate all the required mipmaps for the currently bound texture automatically
-    glGenerateMipmap(GL_TEXTURE_2D);
-  }
-  else
-  {
-    std::println("Failed to load texture(.png)");
-  }
-
-  // Release image data
-  stbi_image_free(data);
-
-  // Load specular map
-  data = stbi_load(
-    absolute("../resource/Textures/container2_specular.png").string().c_str(),
-    &width,
-    &height,
-    &nrChannels,
-    0
-  );
-  uint32_t specularMap;
-  glGenTextures(1, &specularMap);
-  glBindTexture(GL_TEXTURE_2D, specularMap);
-  {
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-  }
-
-  if (data != nullptr)
-  {
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, reinterpret_cast<void*>(data));
-
-    // Call this to generate all the required mipmaps for the currently bound texture automatically
-    glGenerateMipmap(GL_TEXTURE_2D);
-  }
-  else
-  {
-    std::println("Failed to load texture(.png)");
-  }
-
-  // Release image data
-  stbi_image_free(data);
-
-  // Cube
-  const float vertices_cube[] =
-  {
-    -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f,
-    0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f, 1.0f, 0.0f,
-    0.5f, 0.5f, -0.5f, 0.0f, 0.0f, -1.0f, 1.0f, 1.0f,
-    0.5f, 0.5f, -0.5f, 0.0f, 0.0f, -1.0f, 1.0f, 1.0f,
-    -0.5f, 0.5f, -0.5f, 0.0f, 0.0f, -1.0f, 0.0f, 1.0f,
-    -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f,
-    -0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
-    0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f,
-    0.5f, 0.5f, 0.5f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f,
-    0.5f, 0.5f, 0.5f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f,
-    -0.5f, 0.5f, 0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f,
-    -0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
-    -0.5f, 0.5f, 0.5f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f,
-    -0.5f, 0.5f, -0.5f, -1.0f, 0.0f, 0.0f, 1.0f, 1.0f,
-    -0.5f, -0.5f, -0.5f, -1.0f, 0.0f, 0.0f, 0.0f, 1.0f,
-    -0.5f, -0.5f, -0.5f, -1.0f, 0.0f, 0.0f, 0.0f, 1.0f,
-    -0.5f, -0.5f, 0.5f, -1.0f, 0.0f, 0.0f, 0.0f, 0.0f,
-    -0.5f, 0.5f, 0.5f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f,
-    0.5f, 0.5f, 0.5f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f,
-    0.5f, 0.5f, -0.5f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f,
-    0.5f, -0.5f, -0.5f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f,
-    0.5f, -0.5f, -0.5f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f,
-    0.5f, -0.5f, 0.5f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f,
-    0.5f, 0.5f, 0.5f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f,
-    -0.5f, -0.5f, -0.5f, 0.0f, -1.0f, 0.0f, 0.0f, 1.0f,
-    0.5f, -0.5f, -0.5f, 0.0f, -1.0f, 0.0f, 1.0f, 1.0f,
-    0.5f, -0.5f, 0.5f, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f,
-    0.5f, -0.5f, 0.5f, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f,
-    -0.5f, -0.5f, 0.5f, 0.0f, -1.0f, 0.0f, 0.0f, 0.0f,
-    -0.5f, -0.5f, -0.5f, 0.0f, -1.0f, 0.0f, 0.0f, 1.0f,
-    -0.5f, 0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f,
-    0.5f, 0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f,
-    0.5f, 0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f,
-    0.5f, 0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f,
-    -0.5f, 0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f,
-    -0.5f, 0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f
-  };
-
-  const glm::vec3 cubePositions[] = {
-    glm::vec3( 0.0f, 0.0f, 0.0f),
-    glm::vec3( 2.0f, 5.0f, -15.0f),
-    glm::vec3(-1.5f, -2.2f, -2.5f),
-    glm::vec3(-3.8f, -2.0f, -12.3f),
-    glm::vec3( 2.4f, -0.4f, -3.5f),
-    glm::vec3(-1.7f, 3.0f, -7.5f),
-    glm::vec3( 1.3f, -2.0f, -2.5f),
-    glm::vec3( 1.5f, 2.0f, -2.5f),
-    glm::vec3( 1.5f, 0.2f, -1.5f),
-    glm::vec3(-1.3f, 1.0f, -1.5f)
-  };
-
-  const glm::vec3 pointLightPositions[] = 
-  {
-    glm::vec3{0.7f, 0.2f, 2.0f},
-    glm::vec3{2.3f, -3.3f, -4.0f},
-    glm::vec3{-4.0f, 2.0f, -12.0f},
-    glm::vec3{0.0f, 0.0f, -3.0f}
-  };
-
-  // Use vertex buffer object to store vertices(OpenGL object)
-  uint32_t VBO = 0;
-  glGenBuffers(1, &VBO);
-  // Generate vertex array object(OpenGL object)
-  uint32_t VAO;
-  glGenVertexArrays(1, &VAO);
-  
-  glBindBuffer(GL_ARRAY_BUFFER, VBO);
-  
-  /**
-   * Copy user-defined data into the currently bound buffer
-   * First argument: Type of buffer
-   * Second argument: Size of the data we want to pass to the buffer
-   * Third argument: Actual data we want to send
-   * Fourth argument: Specifies how we want the graphics card to manage the given data
-   *                  GL_STREAM_DRAW: The data is set only once and used by the GPU at most a few times
-   *                  GL_STATIC_DRAW: The data is set only once and used many times
-   *                  GL_DYNAMIC_DRAW: The data is changed a lot and used many times
-   */
-  glBufferData(GL_ARRAY_BUFFER, sizeof(vertices_cube), vertices_cube, GL_STATIC_DRAW);
-  
-  // // Copy index array in a element buffer for OpenGL use
-  // glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-  // glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-  
-  // Tell OpenGL how it should interpret vertex data
-  /**
-   * // NOTE layout (location = 0)
-   * First argument: Specifies which vertex attribute we want to configure
-   * // NOTE vec3 -> 3
-   * Second argument: Size of the vertex attribute.
-   * // NOTE vec* in GLSL consists of floating point values -> GL_FLOAT
-   * Third argument: Specifies the type of data
-   * // NOTE GL_TRUE if we inputting integer data type(int, byte)
-   * Fourth argument: Specifies if we want the data to be normalized
-   * // NOTE We could've also specified the stride as 0 to let OpenGL determine it.
-   * // NOTE Only works when values are tightly packed
-   * Fifth argument: Known as the Stride.Space between consecutive vertex attributes
-   * // FIXME Explore this in more detail later
-   * Sixth argument: Offset of where the position data begins.
-   */
-  
-  glBindVertexArray(VAO);
-  // Position attribute(VAO)
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), reinterpret_cast<void*>(0));
-  glEnableVertexAttribArray(0);
-
-  // Normal attribute
-  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), reinterpret_cast<void*>(3 * sizeof(float)));
-  glEnableVertexAttribArray(1);
-
-  // Texture UV attribute
-  glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), reinterpret_cast<void*>(6 * sizeof(float)));
-  glEnableVertexAttribArray(2);
-
-  // Generate light VAO
-  uint32_t lightVAO;
-  glGenVertexArrays(1, &lightVAO);
-  glBindVertexArray(lightVAO);
-
-  // We only need to bind to the VBO, no need to fill it
-  glBindBuffer(GL_ARRAY_BUFFER, VBO);
-
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), reinterpret_cast<void*>(0));
-  glEnableVertexAttribArray(0);
-
   using std::filesystem::absolute;
   OpenGLStudy::Render::GLSLShader shaderProgram{
     absolute("../resource/Shader/shader.vs").string(), 
@@ -365,6 +153,8 @@ int main()
     absolute("../resource/Shader/lightShader.vs").string(), 
     absolute("../resource/Shader/lightShader.fs").string()  
   };
+
+  OpenGLStudy::Render::Model ourModel{absolute("../resource/Backpack/backpack.obj").string()};
 
   shaderProgram.Activate();
   shaderProgram.SetInt("material.diffuse", 0);
@@ -395,7 +185,6 @@ int main()
     // const glm::mat4 view = LookAt(g_Camera, g_Camera.GetPosition() + g_Camera.GetForwardVector());
     const glm::mat4 view = glm::lookAt(g_Camera.GetPosition(), g_Camera.GetPosition() + g_Camera.GetForwardVector(), g_Camera.GetUpVector());
     const glm::mat4 projection = getProjectionMat();
-    const glm::vec3 lightPos = g_LIGHT_POS;
   
     {
       shaderProgram.Activate();
@@ -456,51 +245,13 @@ int main()
       shaderProgram.SetMat4("view", view);
 
       shaderProgram.SetMat4("model", glm::mat4{1.0f});
-      glActiveTexture(GL_TEXTURE0);
-      glBindTexture(GL_TEXTURE_2D, texture1);
-      glActiveTexture(GL_TEXTURE1);
-      glBindTexture(GL_TEXTURE_2D, specularMap);
-  
-      glBindVertexArray(VAO);
-
-      for (uint32_t i = 0; i < sizeof(cubePositions)/ sizeof(cubePositions[0]); ++i)
-      {
-        glm::mat4 model = glm::mat4{1.0f};
-        const float angle = 20.0f * (float)i;
-        
-        model = glm::translate(model, cubePositions[i]);
-        model = glm::rotate(model, glm::radians(angle), glm::vec3{1.0f, 0.3f, 0.5f});
-        const glm::mat4 normalMat = glm::transpose(glm::inverse(model));
-        shaderProgram.SetMat4("model", model);
-        shaderProgram.SetMat4("normalMatrix", normalMat);
-      
-        glDrawArrays(GL_TRIANGLES, 0, 36);
-      }
     }
 
-    // Active light program
-    {
-      lightProgram.Activate();
-      glBindVertexArray(lightVAO);
-
-      for (size_t i = 0; i < sizeof(pointLightPositions)/ sizeof(pointLightPositions[0]); ++i)
-      {
-        glm::mat4 model = glm::mat4{1.0f};
-        model = glm::translate(model, pointLightPositions[i]);
-        model = glm::scale(model, glm::vec3{0.2f});
-        lightProgram.SetMat4("transformMatrix", projection * view * model);
-    
-        glDrawArrays(GL_TRIANGLES, 0, 36);
-      }
-    }
+    ourModel.Draw(shaderProgram);
 
     pollGLFWEvent(window);
     
   }
-
-  glDeleteVertexArrays(1, &VAO);
-  glDeleteVertexArrays(1, &lightVAO);
-  glDeleteBuffers(1, &VBO);
 
   glfwTerminate();
 

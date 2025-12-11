@@ -6,6 +6,7 @@
 #include "glm/glm/vec2.hpp"
 #include "glm/glm/vec3.hpp"
 #include <string>
+#include <iosfwd>
 
 namespace OpenGLStudy
 {
@@ -30,10 +31,15 @@ namespace Render
 
     uint32_t ID;
     ETextureType Type;
+    std::string Path;
+
+    std::string GetTypeString() const;
   };
 
 } // namespace OpenGLStudy::Render
 
 } // namespace OpenGLStudy
+
+
 
 #endif // _OPENGL_STUDY_RENDER_REMDERTYPES_

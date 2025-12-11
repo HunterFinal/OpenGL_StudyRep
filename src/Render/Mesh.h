@@ -27,7 +27,7 @@ namespace Render
       std::vector<Texture> textures;
 
       Mesh(const std::vector<Vertex>& InVertices, const std::vector<uint32_t>& InIndices, const std::vector<Texture>& InTextures);
-      ~Mesh() = default;
+      ~Mesh();
 
     public:
       void Draw(const GLSLShader& InShader);
