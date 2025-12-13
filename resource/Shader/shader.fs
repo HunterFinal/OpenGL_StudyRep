@@ -1,4 +1,4 @@
-#version 460 core
+﻿#version 460 core
 
 out vec4 FragColor;
 in vec3 Normal;
@@ -6,6 +6,11 @@ in vec3 FragPos;
 in vec2 TexCoords;
 
 uniform vec3 viewPos;
+
+float near = 0.1;
+float far = 100.0;
+
+float LinearizeDepth(float depth);
 
 struct Material
 {
@@ -84,6 +89,13 @@ void main()
   // FragColor = vec4(fragRGB, 1.0);
 
   FragColor = texture(material.texture_diffuse1, TexCoords);
+}
+
+float LinearizeDepth(float depth)
+{
+  // back to NDC
+  float z = depth * 2.0 - 1.0;
+  return (2.0 * near * far) / (far + near - z * (far - near));
 }
 
 vec3 CalcDirectionalLight(DirectionalLight light, vec3 normal, vec3 viewDir)

@@ -14,7 +14,7 @@ namespace Render
     const static std::unordered_map<ETextureType, std::string> sTextureTypeNameTable =
     {
       {Diffuse, std::string{"texture_diffuse"}},
-      {Specular, std::string{"texture_specular"}}
+      {Specular, std::string{"texture_specular"}},
     };
 
     if (!sTextureTypeNameTable.contains(Type))

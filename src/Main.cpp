@@ -2,6 +2,8 @@
 #include <memory>
 #include <cmath>
 #include <filesystem>
+#include <windows.h>
+#include <map>
 
 // glad should include before glfw
 #include <glad/glad.h>
@@ -17,8 +19,8 @@
 #include "Render/GLSLShader.h"
 #include "Render/Model.h"
 #include "Runtime/Camera.h"
+#include "Render/ImageLoadHelper.h"
 
-#include <windows.h>
 
 
 namespace OpenGLStudy
@@ -84,6 +86,11 @@ namespace
   bool g_firstMouse = true;
 
   constexpr glm::vec3 g_LIGHT_POS{1.2f, 1.0f, 2.0f};
+}
+
+namespace Chapter
+{
+  static void StencilTesting();
 }
 
 int main()
@@ -157,6 +164,40 @@ int main()
 
   // Activate depth test
   glEnable(GL_DEPTH_TEST);
+  glDepthFunc(GL_LESS);
+
+  // // Activate stencil test
+  // glEnable(GL_STENCIL_TEST);
+  // // update stencil buffer
+  // glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
+  // glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+
+  // Activate blending
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+  // Activate face culling
+  glEnable(GL_CULL_FACE);
+  // Set which face you want to cull
+  // glCullFace(GL_FRONT);
+  // Tell OpenGL that which order of vertex is specifying as front face
+  /**
+   * GL_CW :  clockwise ordering
+   * GL_CCW : counter-clockwise ordering
+   */
+  // glFrontFace(GL_CW);
+
+  // Set different options for the RGB and alpha by using glBlendFuncSeparate
+  // glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ZERO);
+
+  // glBlendEquation allows us to set how Src and Dst color operate
+  // GL_FUNC_ADD :              result = Src + Dst
+  // GL_FUNC_SUBTRACT :         result = Src - Dst
+  // GL_FUNC_REVERSE_SUBTRACT : result = Dst - Src
+  
+  // Takes the component-wise min/max of both
+  // GL_MIN :                   result = min(Src, Dst);
+  // GL_MAX :                   result = max(Src, Dst);
 
   // Use generic_string() instead of string to avoid platform diff
   // Windows: '/' will turn to '\'
@@ -167,7 +208,58 @@ int main()
     absolute("resource/Shader/shader.fs").generic_string()
   };
 
-  OpenGLStudy::Render::Model ourModel{absolute("resource/Backpack/backpack.obj").generic_string()};
+  OpenGLStudy::Render::GLSLShader outlineShaderProgram{
+    absolute("resource/Shader/shader.vs").generic_string(),
+    absolute("resource/Shader/shaderSingleColor.fs").generic_string(),
+  };
+
+  OpenGLStudy::Render::GLSLShader transparentShaderProgram{
+    absolute("resource/Shader/transparencyShader.vs").generic_string(),
+    absolute("resource/Shader/transparencyShader.fs").generic_string(),
+  };
+
+  OpenGLStudy::Render::Model ourModel{absolute("resource/Meshes/Backpack/backpack.obj").generic_string()};
+
+  const float transparentVertices[] = {
+      // positions         // texture Coords (swapped y coordinates because texture is flipped upside down)
+      0.0f,  0.5f,  0.0f,  0.0f,  0.0f,
+      0.0f, -0.5f,  0.0f,  0.0f,  1.0f,
+      1.0f, -0.5f,  0.0f,  1.0f,  1.0f,
+
+      0.0f,  0.5f,  0.0f,  0.0f,  0.0f,
+      1.0f, -0.5f,  0.0f,  1.0f,  1.0f,
+      1.0f,  0.5f,  0.0f,  1.0f,  0.0f
+  };
+
+  const std::vector<glm::vec3> windows
+    {
+      glm::vec3(-1.5f, 0.0f, -0.48f),
+      glm::vec3( 1.5f, 0.0f, 0.51f),
+      glm::vec3( 0.0f, 0.0f, 0.7f),
+      glm::vec3(-0.3f, 0.0f, -2.3f),
+      glm::vec3( 0.5f, 0.0f, -0.6f)
+    };
+
+  uint32_t transparentTexture = OpenGLStudy::Helper::ImageLoadHelper::TextureFromFile(
+    "blending_transparent_window.png",
+    absolute("resource/Textures").generic_string()
+  );
+
+  transparentShaderProgram.Activate();
+  transparentShaderProgram.SetInt("texture1", 0);
+
+  // transparent VAO
+  uint32_t transparentVAO, transparentVBO;
+  glGenVertexArrays(1, &transparentVAO);
+  glGenBuffers(1, &transparentVBO);
+  glBindVertexArray(transparentVAO);
+  glBindBuffer(GL_ARRAY_BUFFER, transparentVBO);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(transparentVertices), transparentVertices, GL_STATIC_DRAW);
+  glEnableVertexAttribArray(0);
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+  glEnableVertexAttribArray(1);
+  glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+  glBindVertexArray(0);
 
   while(!glfwWindowShouldClose(window))
   {
@@ -176,78 +268,22 @@ int main()
 
     // Set background color
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
-    // Render triangles
-    /**
-     * First argument: Specifies the mode we want to draw in(Similar to glDrawArrays)
-     * Second argument: Count or number of elements we'd like to draw
-     * Third argument: Type of indices(uint32_t -> GL_UNSIGNED_INT)
-     * // NOTE Pass in an index array when you're not using element buffer objects
-     * Fourth argument: Specify an offset in the EBO
-     * 
-     * @see glDrawElements()
-     */
-    // glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-    
-    // NOTE Buggy
-    // const glm::mat4 view = LookAt(g_Camera, g_Camera.GetPosition() + g_Camera.GetForwardVector());
+    // sort the transparent windows before rendering
+    std::map<float, glm::vec3> sorted{};
+    for (size_t i = 0; i < windows.size(); i++)
+    {
+        const float distance = glm::length(g_Camera.GetPosition() - windows[i]);
+        sorted[distance] = windows[i];
+    }
+
     const glm::mat4 view = glm::lookAt(g_Camera.GetPosition(), g_Camera.GetPosition() + g_Camera.GetForwardVector(), g_Camera.GetUpVector());
     const glm::mat4 projection = getProjectionMat();
   
+    // 1st. render pass, draw objects as normal, writing to the stencil buffer
     {
       shaderProgram.Activate();
-
-      // shaderProgram.SetFloat("material.shininess", 32.0f);
-      // // Directional light
-      // shaderProgram.SetVec3("sunLight.ambient", glm::vec3{0.2f});
-      // shaderProgram.SetVec3("sunLight.diffuse", glm::vec3{0.5f});
-      // shaderProgram.SetVec3("sunLight.specular", glm::vec3{1.0f});
-      // shaderProgram.SetVec3("sunLight.direction", glm::vec3{-0.2f, -1.0f, -0.3f});
-
-      // // Point light
-      // {
-      //   shaderProgram.SetVec3("pointLights[0].ambient", glm::vec3{0.2f});
-      //   shaderProgram.SetVec3("pointLights[0].diffuse", glm::vec3{0.5f});
-      //   shaderProgram.SetVec3("pointLights[0].specular", glm::vec3{1.0f});
-      //   shaderProgram.SetFloat("pointLights[0].constant", 1.0f);
-      //   shaderProgram.SetFloat("pointLights[0].linear", 0.09f);
-      //   shaderProgram.SetFloat("pointLights[0].quadratic", 0.032f);
-
-      //   shaderProgram.SetVec3("pointLights[1].ambient", glm::vec3{0.2f});
-      //   shaderProgram.SetVec3("pointLights[1].diffuse", glm::vec3{0.5f});
-      //   shaderProgram.SetVec3("pointLights[1].specular", glm::vec3{1.0f});
-      //   shaderProgram.SetFloat("pointLights[1].constant", 1.0f);
-      //   shaderProgram.SetFloat("pointLights[1].linear", 0.09f);
-      //   shaderProgram.SetFloat("pointLights[1].quadratic", 0.032f);
-
-      //   shaderProgram.SetVec3("pointLights[2].ambient", glm::vec3{0.2f});
-      //   shaderProgram.SetVec3("pointLights[2].diffuse", glm::vec3{0.5f});
-      //   shaderProgram.SetVec3("pointLights[2].specular", glm::vec3{1.0f});
-      //   shaderProgram.SetFloat("pointLights[2].constant", 1.0f);
-      //   shaderProgram.SetFloat("pointLights[2].linear", 0.09f);
-      //   shaderProgram.SetFloat("pointLights[2].quadratic", 0.032f);
-
-      //   shaderProgram.SetVec3("pointLights[3].ambient", glm::vec3{0.2f});
-      //   shaderProgram.SetVec3("pointLights[3].diffuse", glm::vec3{0.5f});
-      //   shaderProgram.SetVec3("pointLights[3].specular", glm::vec3{1.0f});
-      //   shaderProgram.SetFloat("pointLights[3].constant", 1.0f);
-      //   shaderProgram.SetFloat("pointLights[3].linear", 0.09f);
-      //   shaderProgram.SetFloat("pointLights[3].quadratic", 0.032f);
-
-      // }
-
-      // // Spot light
-      // shaderProgram.SetVec3("flashLight.position", g_Camera.GetPosition());
-      // shaderProgram.SetVec3("flashLight.direction", g_Camera.GetForwardVector());
-      // shaderProgram.SetFloat("flashLight.cutOff", std::cosf(glm::radians(12.5f)));
-      // shaderProgram.SetFloat("flashLight.outerCutOff", std::cosf(glm::radians(17.5f)));
-      // shaderProgram.SetVec3("flashLight.ambient", glm::vec3{0.2f});
-      // shaderProgram.SetVec3("flashLight.diffuse", glm::vec3{0.5f});
-      // shaderProgram.SetVec3("flashLight.specular", glm::vec3{1.0f});
-      // shaderProgram.SetFloat("flashLight.constant", 1.0f);
-      // shaderProgram.SetFloat("flashLight.linear", 0.09f);
-      // shaderProgram.SetFloat("flashLight.quadratic", 0.032f);
 
       shaderProgram.SetVec3("viewPos", g_Camera.GetPosition());
       shaderProgram.SetMat4("projection", projection);
@@ -256,18 +292,35 @@ int main()
       glm::mat4 model = glm::mat4{1.0f};
       model = glm::translate(model, glm::vec3{0.0f});
       model = glm::scale(model, glm::vec3{1.0f});
-
       shaderProgram.SetMat4("model", model);
-    }
 
-    ourModel.Draw(shaderProgram);
+      // backpack
+      ourModel.Draw(shaderProgram);
+    }
+    
+    // 2nd. render pass: now draw slightly scaled versions of the objects, this time disabling stencil writing.
+    // Because the stencil buffer is now filled with several 1s. The parts of the buffer that are 1 are not drawn, thus only drawing 
+    // the objects' size differences, making it look like borders.
+    {
+      transparentShaderProgram.Activate();
+      transparentShaderProgram.SetMat4("projection", projection);
+      transparentShaderProgram.SetMat4("view", view);
+      glBindVertexArray(transparentVAO);
+      glBindTexture(GL_TEXTURE_2D, transparentTexture);
+      for (decltype(sorted)::reverse_iterator rit = sorted.rbegin(); rit != sorted.rend(); ++rit)
+      {
+        glm::mat4 model = glm::mat4{1.0f};
+        model = glm::translate(model, rit->second);
+        transparentShaderProgram.SetMat4("model", model);
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+      }
+    }
 
     pollGLFWEvent(window);
     
   }
 
   glfwTerminate();
-  
   FreeConsole();
 
   return 0;
@@ -408,4 +461,111 @@ namespace
     return lookAtMatLeft * lookAtMatRight;
 
   }
+}
+
+namespace Chapter
+{
+  void StencilTesting()
+  {
+    // const glm::mat4 view = glm::lookAt(g_Camera.GetPosition(), g_Camera.GetPosition() + g_Camera.GetForwardVector(), g_Camera.GetUpVector());
+    // const glm::mat4 projection = getProjectionMat();
+  
+    // // 1st. render pass, draw objects as normal, writing to the stencil buffer
+    // {
+    //   shaderProgram.Activate();
+
+    //   // shaderProgram.SetFloat("material.shininess", 32.0f);
+    //   // // Directional light
+    //   // shaderProgram.SetVec3("sunLight.ambient", glm::vec3{0.2f});
+    //   // shaderProgram.SetVec3("sunLight.diffuse", glm::vec3{0.5f});
+    //   // shaderProgram.SetVec3("sunLight.specular", glm::vec3{1.0f});
+    //   // shaderProgram.SetVec3("sunLight.direction", glm::vec3{-0.2f, -1.0f, -0.3f});
+
+    //   // // Point light
+    //   // {
+    //   //   shaderProgram.SetVec3("pointLights[0].ambient", glm::vec3{0.2f});
+    //   //   shaderProgram.SetVec3("pointLights[0].diffuse", glm::vec3{0.5f});
+    //   //   shaderProgram.SetVec3("pointLights[0].specular", glm::vec3{1.0f});
+    //   //   shaderProgram.SetFloat("pointLights[0].constant", 1.0f);
+    //   //   shaderProgram.SetFloat("pointLights[0].linear", 0.09f);
+    //   //   shaderProgram.SetFloat("pointLights[0].quadratic", 0.032f);
+
+    //   //   shaderProgram.SetVec3("pointLights[1].ambient", glm::vec3{0.2f});
+    //   //   shaderProgram.SetVec3("pointLights[1].diffuse", glm::vec3{0.5f});
+    //   //   shaderProgram.SetVec3("pointLights[1].specular", glm::vec3{1.0f});
+    //   //   shaderProgram.SetFloat("pointLights[1].constant", 1.0f);
+    //   //   shaderProgram.SetFloat("pointLights[1].linear", 0.09f);
+    //   //   shaderProgram.SetFloat("pointLights[1].quadratic", 0.032f);
+
+    //   //   shaderProgram.SetVec3("pointLights[2].ambient", glm::vec3{0.2f});
+    //   //   shaderProgram.SetVec3("pointLights[2].diffuse", glm::vec3{0.5f});
+    //   //   shaderProgram.SetVec3("pointLights[2].specular", glm::vec3{1.0f});
+    //   //   shaderProgram.SetFloat("pointLights[2].constant", 1.0f);
+    //   //   shaderProgram.SetFloat("pointLights[2].linear", 0.09f);
+    //   //   shaderProgram.SetFloat("pointLights[2].quadratic", 0.032f);
+
+    //   //   shaderProgram.SetVec3("pointLights[3].ambient", glm::vec3{0.2f});
+    //   //   shaderProgram.SetVec3("pointLights[3].diffuse", glm::vec3{0.5f});
+    //   //   shaderProgram.SetVec3("pointLights[3].specular", glm::vec3{1.0f});
+    //   //   shaderProgram.SetFloat("pointLights[3].constant", 1.0f);
+    //   //   shaderProgram.SetFloat("pointLights[3].linear", 0.09f);
+    //   //   shaderProgram.SetFloat("pointLights[3].quadratic", 0.032f);
+
+    //   // }
+
+    //   // // Spot light
+    //   // shaderProgram.SetVec3("flashLight.position", g_Camera.GetPosition());
+    //   // shaderProgram.SetVec3("flashLight.direction", g_Camera.GetForwardVector());
+    //   // shaderProgram.SetFloat("flashLight.cutOff", std::cosf(glm::radians(12.5f)));
+    //   // shaderProgram.SetFloat("flashLight.outerCutOff", std::cosf(glm::radians(17.5f)));
+    //   // shaderProgram.SetVec3("flashLight.ambient", glm::vec3{0.2f});
+    //   // shaderProgram.SetVec3("flashLight.diffuse", glm::vec3{0.5f});
+    //   // shaderProgram.SetVec3("flashLight.specular", glm::vec3{1.0f});
+    //   // shaderProgram.SetFloat("flashLight.constant", 1.0f);
+    //   // shaderProgram.SetFloat("flashLight.linear", 0.09f);
+    //   // shaderProgram.SetFloat("flashLight.quadratic", 0.032f);
+
+    //   shaderProgram.SetVec3("viewPos", g_Camera.GetPosition());
+    //   shaderProgram.SetMat4("projection", projection);
+    //   shaderProgram.SetMat4("view", view);
+
+    //   glm::mat4 model = glm::mat4{1.0f};
+    //   model = glm::translate(model, glm::vec3{0.0f});
+    //   model = glm::scale(model, glm::vec3{1.0f});
+    //   shaderProgram.SetMat4("model", model);
+
+    //   glStencilFunc(GL_ALWAYS, 1, 0xFF);
+    //   glStencilMask(0xFF);
+
+    //   // backpack
+    //   ourModel.Draw(shaderProgram);
+    // }
+    
+    // // 2nd. render pass: now draw slightly scaled versions of the objects, this time disabling stencil writing.
+    // // Because the stencil buffer is now filled with several 1s. The parts of the buffer that are 1 are not drawn, thus only drawing 
+    // // the objects' size differences, making it look like borders.
+    // {
+    //   glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
+    //   glStencilMask(0x00);
+    //   glDisable(GL_STENCIL_TEST);
+    //   outlineShaderProgram.Activate();
+    //   outlineShaderProgram.SetVec3("viewPos", g_Camera.GetPosition());
+    //   outlineShaderProgram.SetMat4("projection", projection);
+    //   outlineShaderProgram.SetMat4("view", view);
+    //   const float scale = 1.1f;
+
+    //   glm::mat4 model = glm::mat4{1.0f};
+    //   model = glm::translate(model, glm::vec3{0.0f});
+    //   model = glm::scale(model, glm::vec3{scale});
+    //   outlineShaderProgram.SetMat4("model", model);
+
+    //   // backpack outline
+    //   ourModel.Draw(outlineShaderProgram);
+
+    //   glStencilMask(0xFF);
+    //   glStencilFunc(GL_ALWAYS, 0, 0xFF);
+    //   glEnable(GL_STENCIL_TEST);
+    // }
+  }
+
 }

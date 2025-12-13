@@ -14,10 +14,11 @@ namespace OpenGLStudy
 namespace Render
 {
 
-  Model::Model(const std::string& InPath)
+  Model::Model(const std::string& InPath, EModelRenderMode InRenderMode)
     : m_meshes{}
     , m_directory{}
     , m_loadedTextures{}
+    , m_renderMode{InRenderMode}
   {
     LoadModel(InPath);
   }
@@ -151,11 +152,29 @@ namespace Render
     if (_aiMesh->mMaterialIndex >= 0)
     {
       aiMaterial* mat = InScene->mMaterials[_aiMesh->mMaterialIndex];
-      std::vector<Texture> diffuseMap = LoadMaterialTextures(mat, aiTextureType_DIFFUSE, Texture::Diffuse);
-      std::copy(diffuseMap.begin(), diffuseMap.end(), std::back_inserter(textures));
+      using enum EModelRenderMode;
+      switch (m_renderMode)
+      {
+        case Traditional:
+        {
+          std::vector<Texture> diffuseMap = LoadMaterialTextures(mat, aiTextureType_DIFFUSE, Texture::Diffuse);
+          std::copy(diffuseMap.begin(), diffuseMap.end(), std::back_inserter(textures));
+    
+          std::vector<Texture> specularMap = LoadMaterialTextures(mat, aiTextureType_SPECULAR, Texture::Specular);
+          std::copy(specularMap.begin(), specularMap.end(), std::back_inserter(textures));
+        }
+        break;
 
-      std::vector<Texture> specularMap = LoadMaterialTextures(mat, aiTextureType_SPECULAR, Texture::Specular);
-      std::copy(specularMap.begin(), specularMap.end(), std::back_inserter(textures));
+        case PBR:
+        {
+          std::vector<Texture> baseColorMap = LoadMaterialTextures(mat, aiTextureType_DIFFUSE, Texture::BaseColor);
+          std::copy(baseColorMap.begin(), baseColorMap.end(), std::back_inserter(textures));
+    
+          std::vector<Texture> metallicMap = LoadMaterialTextures(mat, aiTextureType_SPECULAR, Texture::Metallic);
+          std::copy(metallicMap.begin(), metallicMap.end(), std::back_inserter(textures));
+        }
+        break;
+      }
     }
 
     return Mesh{vertices, indices, textures};

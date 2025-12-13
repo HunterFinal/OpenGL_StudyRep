@@ -9,9 +9,6 @@
         "stopAtEntry": false,
         "cwd": "${workspaceFolder}",
         "environment": [],
-
-        "MIMode": "gdb",
-        "miDebuggerPath": "D:/MSYS2/ucrt64/bin/gdb.exe",
       },
       {
         "name": "(Windows) Release Start",

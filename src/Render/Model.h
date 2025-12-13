@@ -13,6 +13,12 @@ struct aiScene;
 struct aiMesh;
 struct aiMaterial;
 
+enum class EModelRenderMode : uint8_t
+{
+  Traditional,
+  PBR
+};
+
 namespace OpenGLStudy
 {
 
@@ -24,7 +30,7 @@ namespace Render
   class Model
   {
     public:
-      Model(const std::string& InPath);
+      Model(const std::string& InPath, EModelRenderMode InRenderMode = EModelRenderMode::Traditional);
 
       void Draw(const GLSLShader& InShader);
 
@@ -38,6 +44,7 @@ namespace Render
       std::vector<Mesh> m_meshes;
       std::string       m_directory;
       std::vector<Texture> m_loadedTextures;
+      EModelRenderMode m_renderMode;
   };
 
 } // namespace OpenGLStudy::Render

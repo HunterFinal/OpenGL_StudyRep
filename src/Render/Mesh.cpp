@@ -25,9 +25,7 @@ namespace Render
 
   Mesh::~Mesh()
   {
-    // glDeleteVertexArrays(1, &VAO);
-    // glDeleteBuffers(1, &VBO);
-    // glDeleteBuffers(1, &EBO);
+    ReleaseMesh();
   }
 
   void Mesh::Draw(const GLSLShader& InShader)
@@ -64,6 +62,15 @@ namespace Render
 
     // Draw mesh
     glBindVertexArray(VAO);
+    /**
+     * First argument: Specifies the mode we want to draw in(Similar to glDrawArrays)
+     * Second argument: Count or number of elements we'd like to draw
+     * Third argument: Type of indices(uint32_t -> GL_UNSIGNED_INT)
+     * // NOTE Pass in an index array when you're not using element buffer objects
+     * Fourth argument: Specify an offset in the EBO
+     * 
+     * @see glDrawElements()
+     */
     glDrawElements(GL_TRIANGLES, static_cast<uint32_t>(indices.size()), GL_UNSIGNED_INT, 0);
     glBindVertexArray(0);
     
@@ -122,6 +129,58 @@ namespace Render
     glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(offsetof(Vertex, TexCoords)));
 
     glBindVertexArray(0);
+  }
+
+  void Mesh::ReleaseMesh()
+  {
+    auto releaseVectorLambda = [](auto& OutVector) static
+    {
+      OutVector.clear();
+      OutVector.shrink_to_fit();
+    };
+
+    releaseVectorLambda(vertices);
+    releaseVectorLambda(indices);
+    releaseVectorLambda(textures);
+
+    glDeleteVertexArrays(1, &VAO);
+    glDeleteBuffers(1, &VBO);
+    glDeleteBuffers(1, &EBO);
+  }
+
+  Mesh::Mesh(Mesh&& Other) noexcept
+    : vertices{std::move(Other.vertices)}
+    , indices{std::move(Other.indices)}
+    , textures{std::move(Other.textures)}
+    , VAO{Other.VAO}
+    , VBO{Other.VBO}
+    , EBO{Other.EBO}
+  {  
+    // Set all OpenGL object to non-functional object(0)
+    Other.VAO = 0;
+    Other.VBO = 0;
+    Other.EBO = 0; 
+  }
+  Mesh& Mesh::operator=(Mesh&& Other) noexcept
+  {
+    if (this != &Other)
+    {
+      ReleaseMesh();
+
+      vertices = std::move(Other.vertices);
+      indices = std::move(Other.indices);
+      textures = std::move(Other.textures);
+      VAO = Other.VAO;
+      VBO = Other.VBO;
+      EBO = Other.EBO;
+
+      // Set all OpenGL object to non-functional object(0)
+      Other.VAO = 0;
+      Other.VBO = 0;
+      Other.EBO = 0;
+    }
+
+    return *this;
   }
 
 } // namespace OpenGLStudy::Render

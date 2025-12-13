@@ -29,11 +29,15 @@ namespace Render
       Mesh(const std::vector<Vertex>& InVertices, const std::vector<uint32_t>& InIndices, const std::vector<Texture>& InTextures);
       ~Mesh();
 
+      Mesh(Mesh&& Other) noexcept;
+      Mesh& operator=(Mesh&& Other) noexcept;
+
     public:
       void Draw(const GLSLShader& InShader);
 
     private:
       void InitializeMesh();
+      void ReleaseMesh();
 
     private:
       uint32_t VAO;

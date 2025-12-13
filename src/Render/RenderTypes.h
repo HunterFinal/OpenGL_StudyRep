@@ -26,7 +26,9 @@ namespace Render
     enum ETextureType : uint8_t
     {
       Diffuse,
-      Specular
+      Specular,
+      BaseColor,
+      Metallic
     };
 
     uint32_t ID;
