@@ -1,6 +1,8 @@
 ﻿#include "Mesh.h"
 #include "GLSLShader.h"
 #include <glad/glad.h>
+#include <print>
+#include <iostream>
 
 namespace
 {
@@ -23,9 +25,9 @@ namespace Render
 
   Mesh::~Mesh()
   {
-    glDeleteVertexArrays(1, &VAO);
-    glDeleteBuffers(1, &VBO);
-    glDeleteBuffers(1, &EBO);
+    // glDeleteVertexArrays(1, &VAO);
+    // glDeleteBuffers(1, &VBO);
+    // glDeleteBuffers(1, &EBO);
   }
 
   void Mesh::Draw(const GLSLShader& InShader)
@@ -56,16 +58,16 @@ namespace Render
         break;
       }
 
-      InShader.SetFloat(textureStr.c_str(), static_cast<float>(i));
-      glBindTexture(GL_TEXTURE_2D, textures[i].ID);
+      InShader.SetInt(textureStr.c_str(), i);
+      glBindTexture(GL_TEXTURE_2D, texture.ID);
     }
-
-    glActiveTexture(GL_TEXTURE0);
 
     // Draw mesh
     glBindVertexArray(VAO);
-    glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, reinterpret_cast<void*>(0));
+    glDrawElements(GL_TRIANGLES, static_cast<uint32_t>(indices.size()), GL_UNSIGNED_INT, 0);
     glBindVertexArray(0);
+    
+    glActiveTexture(GL_TEXTURE0);
   }
   
   void Mesh::InitializeMesh()
@@ -87,10 +89,10 @@ namespace Render
      *                  GL_STATIC_DRAW: The data is set only once and used many times
      *                  GL_DYNAMIC_DRAW: The data is changed a lot and used many times
      */
-    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(decltype(vertices)::value_type), vertices.data(), GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(decltype(vertices)::value_type), &vertices[0], GL_STATIC_DRAW);
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(decltype(indices)::value_type), indices.data(), GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(decltype(indices)::value_type), &indices[0], GL_STATIC_DRAW);
 
     // Tell OpenGL how it should interpret vertex data
     /**
@@ -118,6 +120,8 @@ namespace Render
 
     glEnableVertexAttribArray(2);
     glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(offsetof(Vertex, TexCoords)));
+
+    glBindVertexArray(0);
   }
 
 } // namespace OpenGLStudy::Render

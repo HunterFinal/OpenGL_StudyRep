@@ -45,10 +45,11 @@ namespace Render
      * Documentation:
      * URL:https://the-asset-importer-lib-documentation.readthedocs.io/en/latest/usage/postprocessing.html
      */
-    const aiScene* scene = importer.ReadFile(InPath, aiProcess_Triangulate | aiProcess_FlipUVs);
+    const aiPostProcessSteps ppSteps = static_cast<aiPostProcessSteps>(aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_GenSmoothNormals | aiProcess_CalcTangentSpace);
+    const aiScene* scene = importer.ReadFile(InPath, ppSteps);
 
     // Check imported model
-    if ((scene == nullptr) || (scene->mRootNode == nullptr))
+    if ((scene == nullptr) || (scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE) || (scene->mRootNode == nullptr))
     {
       std::println("{}", importer.GetErrorString());
       return;
@@ -111,8 +112,11 @@ namespace Render
 
       // Normal
       {
-        const aiVector3D& aiVec3_Norm = _aiMesh->mNormals[i];
-        vertex.Normal = glm::vec3{aiVec3_Norm.x, aiVec3_Norm.y, aiVec3_Norm.z};
+        if (_aiMesh->HasNormals())
+        {
+          const aiVector3D& aiVec3_Norm = _aiMesh->mNormals[i];
+          vertex.Normal = glm::vec3{aiVec3_Norm.x, aiVec3_Norm.y, aiVec3_Norm.z};
+        }
       }
 
       // Texcoord
@@ -129,6 +133,8 @@ namespace Render
           vertex.TexCoords = glm::vec2{0.0f};
         }
       }
+
+      vertices.emplace_back(std::move(vertex));
     }
 
     // Process indices
@@ -153,7 +159,6 @@ namespace Render
     }
 
     return Mesh{vertices, indices, textures};
-
   }
 
   std::vector<Texture> Model::LoadMaterialTextures(aiMaterial* Mat, int32_t Type, Texture::ETextureType InType)
@@ -169,6 +174,7 @@ namespace Render
       Mat->GetTexture((aiTextureType)Type, i, &str);
       bool bSkip = false;
 
+      // Find loaded texture
       decltype(m_loadedTextures)::iterator it = std::find_if(m_loadedTextures.begin(), m_loadedTextures.end(), 
         [&str](const Texture& Element)
         {
@@ -195,7 +201,6 @@ namespace Render
 
     return textures;
   }
-
 
 } // namespace OpenGLStudy::Render
 

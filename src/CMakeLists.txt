@@ -91,15 +91,15 @@ target_link_libraries(
 )
 
 # Third party libraries(DLL)
-file(GLOB THIRD_PARTY_DLLS "${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/lib/*.dll")
+#file(GLOB THIRD_PARTY_DLLS "${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/lib/*.dll")
 
 # Copy DLL
-add_custom_command(TARGET OpenGL_Study POST_BUILD
-  COMMAND ${CMAKE_COMMAND} -E copy_if_different
-          ${THIRD_PARTY_DLLS} $<TARGET_FILE_DIR:OpenGL_Study>
-
-  VERBATIM
-)
+#add_custom_command(TARGET OpenGL_Study POST_BUILD
+#  COMMAND ${CMAKE_COMMAND} -E copy_if_different
+#          ${THIRD_PARTY_DLLS} $<TARGET_FILE_DIR:OpenGL_Study>
+#
+#  VERBATIM
+#)
 
 
 if(MSVC)

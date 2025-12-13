@@ -18,6 +18,8 @@
 #include "Render/Model.h"
 #include "Runtime/Camera.h"
 
+#include <windows.h>
+
 
 namespace OpenGLStudy
 {
@@ -86,8 +88,6 @@ namespace
 
 int main()
 {
-  using OpenGLStudy::GL_NDCVector3;
-
   glfwInit();
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, OPENGL_VERSION_MAJOR);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, OPENGL_VERSION_MINOR);
@@ -119,6 +119,22 @@ int main()
   // Filp the y-axis during image loading
   stbi_set_flip_vertically_on_load(true);
 
+  {
+    AllocConsole();
+    FILE* fp;
+
+    // stdout
+    freopen_s(&fp, "CONOUT$", "w", stdout);
+    setvbuf(stdout, NULL, _IONBF, 0);
+
+    // stderr
+    freopen_s(&fp, "CONOUT$", "w", stderr);
+    setvbuf(stderr, NULL, _IONBF, 0);
+    
+    std::ios::sync_with_stdio(true);
+
+  }
+
   // Set OpenGL polygon mode
   // {
   //   Wireframe mode
@@ -142,23 +158,16 @@ int main()
   // Activate depth test
   glEnable(GL_DEPTH_TEST);
 
+  // Use generic_string() instead of string to avoid platform diff
+  // Windows: '/' will turn to '\'
+  // Linus: Keep '/' still
   using std::filesystem::absolute;
   OpenGLStudy::Render::GLSLShader shaderProgram{
-    absolute("../resource/Shader/shader.vs").string(), 
-    absolute("../resource/Shader/shader.fs").string()
+    absolute("resource/Shader/shader.vs").generic_string(), 
+    absolute("resource/Shader/shader.fs").generic_string()
   };
 
-  OpenGLStudy::Render::GLSLShader lightProgram
-  {
-    absolute("../resource/Shader/lightShader.vs").string(), 
-    absolute("../resource/Shader/lightShader.fs").string()  
-  };
-
-  OpenGLStudy::Render::Model ourModel{absolute("../resource/Backpack/backpack.obj").string()};
-
-  shaderProgram.Activate();
-  shaderProgram.SetInt("material.diffuse", 0);
-  shaderProgram.SetInt("material.specular", 1);
+  OpenGLStudy::Render::Model ourModel{absolute("resource/Backpack/backpack.obj").generic_string()};
 
   while(!glfwWindowShouldClose(window))
   {
@@ -189,62 +198,66 @@ int main()
     {
       shaderProgram.Activate();
 
-      shaderProgram.SetFloat("material.shininess", 32.0f);
-      // Directional light
-      shaderProgram.SetVec3("sunLight.ambient", glm::vec3{0.2f});
-      shaderProgram.SetVec3("sunLight.diffuse", glm::vec3{0.5f});
-      shaderProgram.SetVec3("sunLight.specular", glm::vec3{1.0f});
-      shaderProgram.SetVec3("sunLight.direction", glm::vec3{-0.2f, -1.0f, -0.3f});
+      // shaderProgram.SetFloat("material.shininess", 32.0f);
+      // // Directional light
+      // shaderProgram.SetVec3("sunLight.ambient", glm::vec3{0.2f});
+      // shaderProgram.SetVec3("sunLight.diffuse", glm::vec3{0.5f});
+      // shaderProgram.SetVec3("sunLight.specular", glm::vec3{1.0f});
+      // shaderProgram.SetVec3("sunLight.direction", glm::vec3{-0.2f, -1.0f, -0.3f});
 
-      // Point light
-      {
-        shaderProgram.SetVec3("pointLights[0].ambient", glm::vec3{0.2f});
-        shaderProgram.SetVec3("pointLights[0].diffuse", glm::vec3{0.5f});
-        shaderProgram.SetVec3("pointLights[0].specular", glm::vec3{1.0f});
-        shaderProgram.SetFloat("pointLights[0].constant", 1.0f);
-        shaderProgram.SetFloat("pointLights[0].linear", 0.09f);
-        shaderProgram.SetFloat("pointLights[0].quadratic", 0.032f);
+      // // Point light
+      // {
+      //   shaderProgram.SetVec3("pointLights[0].ambient", glm::vec3{0.2f});
+      //   shaderProgram.SetVec3("pointLights[0].diffuse", glm::vec3{0.5f});
+      //   shaderProgram.SetVec3("pointLights[0].specular", glm::vec3{1.0f});
+      //   shaderProgram.SetFloat("pointLights[0].constant", 1.0f);
+      //   shaderProgram.SetFloat("pointLights[0].linear", 0.09f);
+      //   shaderProgram.SetFloat("pointLights[0].quadratic", 0.032f);
 
-        shaderProgram.SetVec3("pointLights[1].ambient", glm::vec3{0.2f});
-        shaderProgram.SetVec3("pointLights[1].diffuse", glm::vec3{0.5f});
-        shaderProgram.SetVec3("pointLights[1].specular", glm::vec3{1.0f});
-        shaderProgram.SetFloat("pointLights[1].constant", 1.0f);
-        shaderProgram.SetFloat("pointLights[1].linear", 0.09f);
-        shaderProgram.SetFloat("pointLights[1].quadratic", 0.032f);
+      //   shaderProgram.SetVec3("pointLights[1].ambient", glm::vec3{0.2f});
+      //   shaderProgram.SetVec3("pointLights[1].diffuse", glm::vec3{0.5f});
+      //   shaderProgram.SetVec3("pointLights[1].specular", glm::vec3{1.0f});
+      //   shaderProgram.SetFloat("pointLights[1].constant", 1.0f);
+      //   shaderProgram.SetFloat("pointLights[1].linear", 0.09f);
+      //   shaderProgram.SetFloat("pointLights[1].quadratic", 0.032f);
 
-        shaderProgram.SetVec3("pointLights[2].ambient", glm::vec3{0.2f});
-        shaderProgram.SetVec3("pointLights[2].diffuse", glm::vec3{0.5f});
-        shaderProgram.SetVec3("pointLights[2].specular", glm::vec3{1.0f});
-        shaderProgram.SetFloat("pointLights[2].constant", 1.0f);
-        shaderProgram.SetFloat("pointLights[2].linear", 0.09f);
-        shaderProgram.SetFloat("pointLights[2].quadratic", 0.032f);
+      //   shaderProgram.SetVec3("pointLights[2].ambient", glm::vec3{0.2f});
+      //   shaderProgram.SetVec3("pointLights[2].diffuse", glm::vec3{0.5f});
+      //   shaderProgram.SetVec3("pointLights[2].specular", glm::vec3{1.0f});
+      //   shaderProgram.SetFloat("pointLights[2].constant", 1.0f);
+      //   shaderProgram.SetFloat("pointLights[2].linear", 0.09f);
+      //   shaderProgram.SetFloat("pointLights[2].quadratic", 0.032f);
 
-        shaderProgram.SetVec3("pointLights[3].ambient", glm::vec3{0.2f});
-        shaderProgram.SetVec3("pointLights[3].diffuse", glm::vec3{0.5f});
-        shaderProgram.SetVec3("pointLights[3].specular", glm::vec3{1.0f});
-        shaderProgram.SetFloat("pointLights[3].constant", 1.0f);
-        shaderProgram.SetFloat("pointLights[3].linear", 0.09f);
-        shaderProgram.SetFloat("pointLights[3].quadratic", 0.032f);
+      //   shaderProgram.SetVec3("pointLights[3].ambient", glm::vec3{0.2f});
+      //   shaderProgram.SetVec3("pointLights[3].diffuse", glm::vec3{0.5f});
+      //   shaderProgram.SetVec3("pointLights[3].specular", glm::vec3{1.0f});
+      //   shaderProgram.SetFloat("pointLights[3].constant", 1.0f);
+      //   shaderProgram.SetFloat("pointLights[3].linear", 0.09f);
+      //   shaderProgram.SetFloat("pointLights[3].quadratic", 0.032f);
 
-      }
+      // }
 
-      // Spot light
-      shaderProgram.SetVec3("flashLight.position", g_Camera.GetPosition());
-      shaderProgram.SetVec3("flashLight.direction", g_Camera.GetForwardVector());
-      shaderProgram.SetFloat("flashLight.cutOff", std::cosf(glm::radians(12.5f)));
-      shaderProgram.SetFloat("flashLight.outerCutOff", std::cosf(glm::radians(17.5f)));
-      shaderProgram.SetVec3("flashLight.ambient", glm::vec3{0.2f});
-      shaderProgram.SetVec3("flashLight.diffuse", glm::vec3{0.5f});
-      shaderProgram.SetVec3("flashLight.specular", glm::vec3{1.0f});
-      shaderProgram.SetFloat("flashLight.constant", 1.0f);
-      shaderProgram.SetFloat("flashLight.linear", 0.09f);
-      shaderProgram.SetFloat("flashLight.quadratic", 0.032f);
+      // // Spot light
+      // shaderProgram.SetVec3("flashLight.position", g_Camera.GetPosition());
+      // shaderProgram.SetVec3("flashLight.direction", g_Camera.GetForwardVector());
+      // shaderProgram.SetFloat("flashLight.cutOff", std::cosf(glm::radians(12.5f)));
+      // shaderProgram.SetFloat("flashLight.outerCutOff", std::cosf(glm::radians(17.5f)));
+      // shaderProgram.SetVec3("flashLight.ambient", glm::vec3{0.2f});
+      // shaderProgram.SetVec3("flashLight.diffuse", glm::vec3{0.5f});
+      // shaderProgram.SetVec3("flashLight.specular", glm::vec3{1.0f});
+      // shaderProgram.SetFloat("flashLight.constant", 1.0f);
+      // shaderProgram.SetFloat("flashLight.linear", 0.09f);
+      // shaderProgram.SetFloat("flashLight.quadratic", 0.032f);
 
       shaderProgram.SetVec3("viewPos", g_Camera.GetPosition());
       shaderProgram.SetMat4("projection", projection);
       shaderProgram.SetMat4("view", view);
 
-      shaderProgram.SetMat4("model", glm::mat4{1.0f});
+      glm::mat4 model = glm::mat4{1.0f};
+      model = glm::translate(model, glm::vec3{0.0f});
+      model = glm::scale(model, glm::vec3{1.0f});
+
+      shaderProgram.SetMat4("model", model);
     }
 
     ourModel.Draw(shaderProgram);
@@ -254,6 +267,8 @@ int main()
   }
 
   glfwTerminate();
+  
+  FreeConsole();
 
   return 0;
 }
