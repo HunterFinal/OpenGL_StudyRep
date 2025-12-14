@@ -5,6 +5,7 @@
 
 #include <cstdint>
 #include <iosfwd>
+#include <vector>
 
 namespace OpenGLStudy
 {
@@ -16,6 +17,7 @@ namespace Helper
   {
     public:
       static uint32_t TextureFromFile(const char* InPath, const std::string& InDirectory);
+      static uint32_t CubemapTextureFromFile(const std::vector<std::string>& InFacesPath);
 
     private:
       ImageLoadHelper() = delete;

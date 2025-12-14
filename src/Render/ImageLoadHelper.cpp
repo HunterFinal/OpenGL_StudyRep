@@ -9,9 +9,9 @@ namespace OpenGLStudy
 
 namespace Helper
 {
-
   uint32_t ImageLoadHelper::TextureFromFile(const char* InPath, const std::string& InDirectory)
   {
+
     std::string fileName{InPath};
     fileName = InDirectory + "/" + fileName;
 
@@ -92,6 +92,41 @@ namespace Helper
     stbi_image_free(data);
 
     return texture;
+  }
+
+  uint32_t ImageLoadHelper::CubemapTextureFromFile(const std::vector<std::string>& InFacesPath)
+  {
+
+    uint32_t cubemapTexture;
+    glGenTextures(1, &cubemapTexture);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
+
+    int32_t width, height, nrChannels;
+    for (size_t i = 0; i < InFacesPath.size(); ++i)
+    {
+      uint8_t* data = stbi_load(InFacesPath[i].c_str(), &width, &height, &nrChannels, 0);
+
+      if (data != nullptr)
+      {
+        const GLenum target = GL_TEXTURE_CUBE_MAP_POSITIVE_X + i;
+        glTexImage2D(target, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+      }
+      else
+      {
+        std::println("Failed to load cubemap texture");
+      }
+
+      stbi_image_free(data);
+
+    }
+
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
+    return cubemapTexture;
   }
 
 }

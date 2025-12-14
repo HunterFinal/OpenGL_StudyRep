@@ -124,7 +124,7 @@ int main()
   glfwSetScrollCallback(window, scroll_callback);
 
   // Filp the y-axis during image loading
-  stbi_set_flip_vertically_on_load(true);
+  // stbi_set_flip_vertically_on_load(true);
 
   {
     AllocConsole();
@@ -144,22 +144,47 @@ int main()
 
   // Set OpenGL polygon mode
   // {
-  //   Wireframe mode
+  //   // Wireframe mode
   //   glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
   // }
 
-  // // Set Texture wrapping mode
-  // {
-  //   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-  //   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-  // }
+  // // Create framebuffer object
+  // uint32_t FBO;
+  // glGenFramebuffers(1, &FBO);
+  // glBindFramebuffer(GL_FRAMEBUFFER, FBO);
 
-  // // Set texture filtering
+  // uint32_t framebufferTexture;
+  // glGenTextures(1, &framebufferTexture);
+  // glBindTexture(GL_TEXTURE_2D, framebufferTexture);
+
+  // glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, WINDOW_WIDTH, WINDOW_HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
+
+  // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+  // /**
+  //  * First argument:  The framebuffer type we're targeting(draw,read or both).
+  //  * Second argument: The type of attachment we're going to attach. 0 at the end suggests we can attach more than 1 color attachment.
+  //  * Third argument:  The type of the texture you want to attach.
+  //  * Fourth argument: The actual texture to attach.
+  //  * Fifth argument:  The mipmap level
+  //  */
+  // glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, framebufferTexture, 0);
+
+  // // Create renderbuffer object
+  // uint32_t RBO;
+  // glGenRenderbuffers(1, &RBO);
+  // glBindRenderbuffer(GL_RENDERBUFFER, RBO);
+  // glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, WINDOW_WIDTH, WINDOW_HEIGHT);
+  // glBindRenderbuffer(GL_RENDERBUFFER, 0);
+
+  // glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, RBO);
+
+  // // Check if requirements of framebuffer are all completed
+  // if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
   // {
-  //   // Magnifying -> scaling upward
-  //   // Minifying  -> scaling downward(Also can set mipmap filter)
-  //   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-  //   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  //   std::println("ERROR::FRAMEBUFFER:: Framebuffer is not complete!");
+  //   glBindFramebuffer(GL_FRAMEBUFFER, 0);
   // }
 
   // Activate depth test
@@ -198,7 +223,7 @@ int main()
   // Takes the component-wise min/max of both
   // GL_MIN :                   result = min(Src, Dst);
   // GL_MAX :                   result = max(Src, Dst);
-
+  
   // Use generic_string() instead of string to avoid platform diff
   // Windows: '/' will turn to '\'
   // Linus: Keep '/' still
@@ -220,7 +245,27 @@ int main()
 
   OpenGLStudy::Render::Model ourModel{absolute("resource/Meshes/Backpack/backpack.obj").generic_string()};
 
-  const float transparentVertices[] = {
+  // Load 6 texture by offset
+  const std::vector<std::string> faces
+  {
+    absolute("resource/Textures/skybox/right.jpg").generic_string(),
+    absolute("resource/Textures/skybox/left.jpg").generic_string(),
+    absolute("resource/Textures/skybox/top.jpg").generic_string(),
+    absolute("resource/Textures/skybox/bottom.jpg").generic_string(),
+    absolute("resource/Textures/skybox/front.jpg").generic_string(),
+    absolute("resource/Textures/skybox/back.jpg").generic_string()
+  };
+
+  OpenGLStudy::Render::GLSLShader skyboxShaderProgram
+  {
+    absolute("resource/Shader/cubemapShader.vs").generic_string(),
+    absolute("resource/Shader/cubemapShader.fs").generic_string()
+  };
+
+  uint32_t cubemapTexture = OpenGLStudy::Helper::ImageLoadHelper::CubemapTextureFromFile(faces);
+
+  const float transparentVertices[] = 
+  {
       // positions         // texture Coords (swapped y coordinates because texture is flipped upside down)
       0.0f,  0.5f,  0.0f,  0.0f,  0.0f,
       0.0f, -0.5f,  0.0f,  0.0f,  1.0f,
@@ -232,13 +277,85 @@ int main()
   };
 
   const std::vector<glm::vec3> windows
-    {
-      glm::vec3(-1.5f, 0.0f, -0.48f),
-      glm::vec3( 1.5f, 0.0f, 0.51f),
-      glm::vec3( 0.0f, 0.0f, 0.7f),
-      glm::vec3(-0.3f, 0.0f, -2.3f),
-      glm::vec3( 0.5f, 0.0f, -0.6f)
-    };
+  {
+    glm::vec3(-1.5f, 0.0f, -0.48f),
+    glm::vec3( 1.5f, 0.0f, 0.51f),
+    glm::vec3( 0.0f, 0.0f, 0.7f),
+    glm::vec3(-0.3f, 0.0f, -2.3f),
+    glm::vec3( 0.5f, 0.0f, -0.6f)
+  };
+
+  const float quadVertices[] = 
+  {
+    // positions // texCoords
+    -1.0f, 1.0f, 0.0f, 1.0f,
+    -1.0f, -1.0f, 0.0f, 0.0f,
+    1.0f, -1.0f, 1.0f, 0.0f,
+    -1.0f, 1.0f, 0.0f, 1.0f,
+    1.0f, -1.0f, 1.0f, 0.0f,
+    1.0f, 1.0f, 1.0f, 1.0f
+  };
+
+  const float skyboxVertices[] = 
+  {
+      // positions          
+      -1.0f,  1.0f, -1.0f,
+      -1.0f, -1.0f, -1.0f,
+        1.0f, -1.0f, -1.0f,
+        1.0f, -1.0f, -1.0f,
+        1.0f,  1.0f, -1.0f,
+      -1.0f,  1.0f, -1.0f,
+
+      -1.0f, -1.0f,  1.0f,
+      -1.0f, -1.0f, -1.0f,
+      -1.0f,  1.0f, -1.0f,
+      -1.0f,  1.0f, -1.0f,
+      -1.0f,  1.0f,  1.0f,
+      -1.0f, -1.0f,  1.0f,
+
+        1.0f, -1.0f, -1.0f,
+        1.0f, -1.0f,  1.0f,
+        1.0f,  1.0f,  1.0f,
+        1.0f,  1.0f,  1.0f,
+        1.0f,  1.0f, -1.0f,
+        1.0f, -1.0f, -1.0f,
+
+      -1.0f, -1.0f,  1.0f,
+      -1.0f,  1.0f,  1.0f,
+        1.0f,  1.0f,  1.0f,
+        1.0f,  1.0f,  1.0f,
+        1.0f, -1.0f,  1.0f,
+      -1.0f, -1.0f,  1.0f,
+
+      -1.0f,  1.0f, -1.0f,
+        1.0f,  1.0f, -1.0f,
+        1.0f,  1.0f,  1.0f,
+        1.0f,  1.0f,  1.0f,
+      -1.0f,  1.0f,  1.0f,
+      -1.0f,  1.0f, -1.0f,
+
+      -1.0f, -1.0f, -1.0f,
+      -1.0f, -1.0f,  1.0f,
+        1.0f, -1.0f, -1.0f,
+        1.0f, -1.0f, -1.0f,
+      -1.0f, -1.0f,  1.0f,
+        1.0f, -1.0f,  1.0f
+  };
+
+  uint32_t quadVAO;
+  glGenVertexArrays(1, &quadVAO);
+  glBindVertexArray(quadVAO);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), quadVertices, GL_STATIC_DRAW);
+  glEnableVertexAttribArray(0);
+  glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+  glEnableVertexAttribArray(1);
+  glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
+  glBindVertexArray(0);
+
+  OpenGLStudy::Render::GLSLShader screenShaderProgram{
+    absolute("resource/Shader/framebufferShader.vs").generic_string(),
+    absolute("resource/Shader/framebufferShader.fs").generic_string(),
+  };
 
   uint32_t transparentTexture = OpenGLStudy::Helper::ImageLoadHelper::TextureFromFile(
     "blending_transparent_window.png",
@@ -261,59 +378,107 @@ int main()
   glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
   glBindVertexArray(0);
 
+  // Create skybox VAO
+  uint32_t skyboxVAO, skyboxVBO;
+  glGenVertexArrays(1, &skyboxVAO);
+  glGenBuffers(1, &skyboxVBO);
+  glBindVertexArray(skyboxVAO);
+  glBindBuffer(GL_ARRAY_BUFFER, skyboxVBO);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices), skyboxVertices, GL_STATIC_DRAW);
+  glEnableVertexAttribArray(0);
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+  glBindVertexArray(0);
+
   while(!glfwWindowShouldClose(window))
   {
     updateTime();
     processInput(window);
 
-    // Set background color
-    glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-
-    // sort the transparent windows before rendering
-    std::map<float, glm::vec3> sorted{};
-    for (size_t i = 0; i < windows.size(); i++)
+    // first pass
     {
-        const float distance = glm::length(g_Camera.GetPosition() - windows[i]);
-        sorted[distance] = windows[i];
-    }
-
-    const glm::mat4 view = glm::lookAt(g_Camera.GetPosition(), g_Camera.GetPosition() + g_Camera.GetForwardVector(), g_Camera.GetUpVector());
-    const glm::mat4 projection = getProjectionMat();
-  
-    // 1st. render pass, draw objects as normal, writing to the stencil buffer
-    {
-      shaderProgram.Activate();
-
-      shaderProgram.SetVec3("viewPos", g_Camera.GetPosition());
-      shaderProgram.SetMat4("projection", projection);
-      shaderProgram.SetMat4("view", view);
-
-      glm::mat4 model = glm::mat4{1.0f};
-      model = glm::translate(model, glm::vec3{0.0f});
-      model = glm::scale(model, glm::vec3{1.0f});
-      shaderProgram.SetMat4("model", model);
-
-      // backpack
-      ourModel.Draw(shaderProgram);
-    }
-    
-    // 2nd. render pass: now draw slightly scaled versions of the objects, this time disabling stencil writing.
-    // Because the stencil buffer is now filled with several 1s. The parts of the buffer that are 1 are not drawn, thus only drawing 
-    // the objects' size differences, making it look like borders.
-    {
-      transparentShaderProgram.Activate();
-      transparentShaderProgram.SetMat4("projection", projection);
-      transparentShaderProgram.SetMat4("view", view);
-      glBindVertexArray(transparentVAO);
-      glBindTexture(GL_TEXTURE_2D, transparentTexture);
-      for (decltype(sorted)::reverse_iterator rit = sorted.rbegin(); rit != sorted.rend(); ++rit)
+      // glBindFramebuffer(GL_FRAMEBUFFER, FBO);
+      // Set background color
+      glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+      glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+      glEnable(GL_DEPTH_TEST);
+      
+      // sort the transparent windows before rendering
+      std::map<float, glm::vec3> sorted{};
+      for (size_t i = 0; i < windows.size(); i++)
       {
-        glm::mat4 model = glm::mat4{1.0f};
-        model = glm::translate(model, rit->second);
-        transparentShaderProgram.SetMat4("model", model);
-        glDrawArrays(GL_TRIANGLES, 0, 6);
+          const float distance = glm::length(g_Camera.GetPosition() - windows[i]);
+          sorted[distance] = windows[i];
       }
+  
+      const glm::mat4 view = glm::lookAt(g_Camera.GetPosition(), g_Camera.GetPosition() + g_Camera.GetForwardVector(), g_Camera.GetUpVector());
+      const glm::mat4 projection = getProjectionMat();
+      // 1st. render pass, draw objects as normal, writing to the stencil buffer
+      {
+        shaderProgram.Activate();
+  
+        shaderProgram.SetVec3("viewPos", g_Camera.GetPosition());
+        shaderProgram.SetMat4("projection", projection);
+        shaderProgram.SetMat4("view", view);
+  
+        glm::mat4 model = glm::mat4{1.0f};
+        model = glm::translate(model, glm::vec3{0.0f});
+        model = glm::scale(model, glm::vec3{1.0f});
+        shaderProgram.SetMat4("model", model);
+  
+        // backpack
+        ourModel.Draw(shaderProgram);
+      }
+      
+      // 2nd. render pass: now draw slightly scaled versions of the objects, this time disabling stencil writing.
+      // Because the stencil buffer is now filled with several 1s. The parts of the buffer that are 1 are not drawn, thus only drawing 
+      // the objects' size differences, making it look like borders.
+      {
+        transparentShaderProgram.Activate();
+        transparentShaderProgram.SetMat4("projection", projection);
+        transparentShaderProgram.SetMat4("view", view);
+        glBindVertexArray(transparentVAO);
+        glBindTexture(GL_TEXTURE_2D, transparentTexture);
+        for (decltype(sorted)::reverse_iterator rit = sorted.rbegin(); rit != sorted.rend(); ++rit)
+        {
+          glm::mat4 model = glm::mat4{1.0f};
+          model = glm::translate(model, rit->second);
+          transparentShaderProgram.SetMat4("model", model);
+          glDrawArrays(GL_TRIANGLES, 0, 6);
+        }
+      }
+    }
+
+    // // second pass
+    // {
+    //   glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    //   glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+    //   glClear(GL_COLOR_BUFFER_BIT);
+
+    //   screenShaderProgram.Activate();
+    //   glBindVertexArray(quadVAO);
+    //   glDisable(GL_DEPTH_TEST);
+    //   glBindTexture(GL_TEXTURE_2D, framebufferTexture);
+    //   glDrawArrays(GL_TRIANGLES, 0, 6);
+    // }
+
+    // Draw skybox as last
+    {
+      // Change depth function so depth test passes when values are equal to depth buffer's content
+      glDepthFunc(GL_LEQUAL);
+      skyboxShaderProgram.Activate();
+      const glm::mat4 view = glm::mat4(glm::mat3(glm::lookAt(g_Camera.GetPosition(), g_Camera.GetPosition() + g_Camera.GetForwardVector(), g_Camera.GetUpVector())));
+      const glm::mat4 projection = getProjectionMat();
+      skyboxShaderProgram.SetMat4("view", view);
+      skyboxShaderProgram.SetMat4("projection", projection);
+
+      glBindVertexArray(skyboxVAO);
+      glActiveTexture(GL_TEXTURE0);
+      glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
+      glDrawArrays(GL_TRIANGLES, 0, 36);
+      glBindVertexArray(0);
+
+      // Set depth function back to default
+      glDepthFunc(GL_LESS);
     }
 
     pollGLFWEvent(window);
