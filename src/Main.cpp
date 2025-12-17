@@ -424,6 +424,14 @@ int main()
         model = glm::translate(model, glm::vec3{0.0f});
         model = glm::scale(model, glm::vec3{1.0f});
         shaderProgram.SetMat4("model", model);
+
+        glm::mat4 normalMat = model;
+        normalMat = glm::inverse(normalMat);
+        normalMat = glm::transpose(normalMat);
+
+        glActiveTexture(GL_TEXTURE5);
+        shaderProgram.SetInt("skybox", 5);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
   
         // backpack
         ourModel.Draw(shaderProgram);

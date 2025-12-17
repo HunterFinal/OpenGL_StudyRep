@@ -1,4 +1,4 @@
-﻿#version 460 core
+#version 460 core
 
 out vec4 FragColor;
 in vec3 Normal;
@@ -6,6 +6,7 @@ in vec3 FragPos;
 in vec2 TexCoords;
 
 uniform vec3 viewPos;
+uniform samplerCube skybox;
 
 float near = 0.1;
 float far = 100.0;
@@ -88,7 +89,12 @@ void main()
 
   // FragColor = vec4(fragRGB, 1.0);
 
-  FragColor = texture(material.texture_diffuse1, TexCoords);
+  // FragColor = texture(material.texture_diffuse1, TexCoords);
+
+  vec3 I = normalize(FragPos - viewPos);
+  vec3 R = reflect(I, normalize(Normal));
+
+  FragColor = vec4(texture(skybox, R).rgb, 1.0);
 }
 
 float LinearizeDepth(float depth)
