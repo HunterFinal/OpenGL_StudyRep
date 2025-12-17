@@ -17,7 +17,7 @@ class GLSLShader
 {
 
 public:
-  GLSLShader(const std::string& vertexPath, const std::string& fragmentPath);
+  GLSLShader(const std::string& vertexPath, const std::string& fragmentPath, std::string* geometryPath = nullptr);
 
   void Activate();
 

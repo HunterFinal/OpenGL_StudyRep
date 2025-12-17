@@ -223,14 +223,20 @@ int main()
   // Takes the component-wise min/max of both
   // GL_MIN :                   result = min(Src, Dst);
   // GL_MAX :                   result = max(Src, Dst);
+
+  // Enable gl_PointSize in GLSL
+  glEnable(GL_PROGRAM_POINT_SIZE);
   
   // Use generic_string() instead of string to avoid platform diff
   // Windows: '/' will turn to '\'
   // Linus: Keep '/' still
   using std::filesystem::absolute;
+  std::string&& gsPath = absolute("resource/Shader/shader.gs").generic_string();
+
   OpenGLStudy::Render::GLSLShader shaderProgram{
     absolute("resource/Shader/shader.vs").generic_string(), 
-    absolute("resource/Shader/shader.fs").generic_string()
+    absolute("resource/Shader/shader.fs").generic_string(),
+    &gsPath
   };
 
   OpenGLStudy::Render::GLSLShader outlineShaderProgram{
@@ -389,6 +395,33 @@ int main()
   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
   glBindVertexArray(0);
 
+  // Create uniform buffer object
+  uint32_t UBOMatricesBlock;
+  glGenBuffers(1, &UBOMatricesBlock);
+  glBindBuffer(GL_UNIFORM_BUFFER, UBOMatricesBlock);
+  // mat4 * 2 = 128bytes
+  constexpr uint32_t UNIFORM_MATRICES_BLOCK_SIZE = 2 * sizeof(glm::mat4);
+  glBufferData(GL_UNIFORM_BUFFER, UNIFORM_MATRICES_BLOCK_SIZE, nullptr, GL_STATIC_DRAW);
+  glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
+  // Before OpenGL4.2 we must call glUniformBlockBinding
+  // uint32_t matricesIndex = glGetUniformBlockIndex(shaderProgram.GetID(), "Matrices");
+  // glUniformBlockBinding(shaderProgram.GetID(), matricesIndex, 0);
+
+  // Bind uniform buffer object to the same binding point
+  glBindBufferBase(GL_UNIFORM_BUFFER, 0, UBOMatricesBlock);
+
+  // NOTE: Offset of glBindBufferRange must be multiple of GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT
+  // GLint uniformBufferOffsetAlign = 0;
+  // glGetIntegerv(GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT, &uniformBufferOffsetAlign);
+  // glBindBufferRange(GL_UNIFORM_BUFFER, 0, UBOMatricesBlock, 0, uniformBufferOffsetAlign);
+
+  // Bind projection mat to uniform object buffer
+  const glm::mat4 projection = getProjectionMat();
+  glBindBuffer(GL_UNIFORM_BUFFER, UBOMatricesBlock);
+  glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(projection), glm::value_ptr(projection));
+  glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
   while(!glfwWindowShouldClose(window))
   {
     updateTime();
@@ -411,7 +444,11 @@ int main()
       }
   
       const glm::mat4 view = glm::lookAt(g_Camera.GetPosition(), g_Camera.GetPosition() + g_Camera.GetForwardVector(), g_Camera.GetUpVector());
-      const glm::mat4 projection = getProjectionMat();
+      constexpr uint32_t VIEW_MEMORY_OFFSET = UNIFORM_MATRICES_BLOCK_SIZE - sizeof(glm::mat4);
+      glBindBuffer(GL_UNIFORM_BUFFER, UBOMatricesBlock);
+      glBufferSubData(GL_UNIFORM_BUFFER, VIEW_MEMORY_OFFSET, sizeof(view), glm::value_ptr(view));
+      glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
       // 1st. render pass, draw objects as normal, writing to the stencil buffer
       {
         shaderProgram.Activate();
@@ -428,10 +465,7 @@ int main()
         glm::mat4 normalMat = model;
         normalMat = glm::inverse(normalMat);
         normalMat = glm::transpose(normalMat);
-
-        glActiveTexture(GL_TEXTURE5);
-        shaderProgram.SetInt("skybox", 5);
-        glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
+        shaderProgram.SetMat4("normalMatrix", normalMat);
   
         // backpack
         ourModel.Draw(shaderProgram);

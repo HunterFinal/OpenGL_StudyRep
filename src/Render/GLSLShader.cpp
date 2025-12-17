@@ -13,18 +13,21 @@ namespace OpenGLStudy
 
 namespace Render
 {
-  GLSLShader::GLSLShader(const std::string& vertexPath, const std::string& fragmentPath)
+  GLSLShader::GLSLShader(const std::string& vertexPath, const std::string& fragmentPath, std::string* geometryPath)
     : m_shaderID{0}
   {
-    std::string vertexCode;
-    std::string fragmentCode;
-    std::ifstream vShaderFile;
-    std::ifstream fShaderFile;
-    vShaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
-    fShaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
-
+    std::string vertexCode{};
+    std::string fragmentCode{};
+    std::string geometryCode{};
+    
+    const bool bUseCustomGeometryShader = (geometryPath != nullptr);
+    
     try
     {
+      std::ifstream vShaderFile;
+      std::ifstream fShaderFile;
+      vShaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+      fShaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
       // open file
       vShaderFile.open(vertexPath);
       fShaderFile.open(fragmentPath);
@@ -40,6 +43,19 @@ namespace Render
       shaderStream << fShaderFile.rdbuf();
       fShaderFile.close();
       fragmentCode = shaderStream.str();
+
+      if (bUseCustomGeometryShader)
+      {
+        std::ifstream gShaderFile;
+        gShaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+        gShaderFile.open(*geometryPath);
+
+        std::stringstream{}.swap(shaderStream);
+
+        shaderStream << gShaderFile.rdbuf();
+        gShaderFile.close();
+        geometryCode = shaderStream.str();
+      }
     }
     catch(const std::ifstream::failure& e)
     {
@@ -94,10 +110,39 @@ namespace Render
       }
     }
 
-    // Link both vertex and fragment to a shader program object(OpenGL object)
+    // Create geometry shader objecr(if has one)
+    uint32_t geometryShader = 0;
+    if (!geometryCode.empty())
+    {
+      geometryShader = glCreateShader(GL_GEOMETRY_SHADER);
+      {
+        const char* gShaderCode = geometryCode.c_str();
+        glShaderSource(geometryShader, 1, &gShaderCode, nullptr);
+        glCompileShader(geometryShader);
+      }
+
+      // Check compilation status
+      {
+        int32_t success;
+        glGetShaderiv(geometryShader, GL_COMPILE_STATUS, &success);
+        if (!success)
+        {
+          char infoLog[infoLogLength];
+          glGetShaderInfoLog(geometryShader, infoLogLength, nullptr, infoLog);
+          std::println("ERROR:Shader fragment compilation failed\n{}", infoLog);
+        }
+      }
+    }
+
+    // Link both vertex and fragment(maybe a custom geometry) to a shader program object(OpenGL object)
     m_shaderID = glCreateProgram();
     glAttachShader(m_shaderID, vertexShader);
     glAttachShader(m_shaderID, fragmentShader);
+    if (geometryShader != 0)
+    {
+      glAttachShader(m_shaderID, geometryShader);
+    }
+
     glLinkProgram(m_shaderID);
   
     // Check link status
