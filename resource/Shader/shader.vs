@@ -3,6 +3,7 @@
 layout (location = 0) in vec3 aPos;
 layout (location = 1) in vec3 aNormal;
 layout (location = 2) in vec2 aTexCoords;
+layout (location = 3) in vec2 aOffset;
 
 // uniform block layout
 // Explicitly states the memory layout for each variable type by standardizing their respective offsets
@@ -29,11 +30,12 @@ out VS_OUT
 uniform mat4 model;
 uniform mat4 normalMatrix;
 
+
 void main()
 {
   mat4 transform = projection * view * model;
 
-  gl_Position = transform * vec4(aPos, 1.0f);
+  gl_Position = transform * vec4(aPos + vec3(aOffset, 0.0), 1.0f);
   gl_PointSize = gl_Position.z;
 
   vs_out.FragPos = vec3(model * vec4(aPos, 1.0));

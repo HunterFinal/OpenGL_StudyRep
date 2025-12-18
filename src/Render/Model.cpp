@@ -23,11 +23,11 @@ namespace Render
     LoadModel(InPath);
   }
 
-  void Model::Draw(const GLSLShader& InShader)
+  void Model::Draw(const GLSLShader& InShader, uint32_t InInstancedNum)
   {
     for (Mesh& mesh : m_meshes)
     {
-      mesh.Draw(InShader);
+      mesh.Draw(InShader, InInstancedNum);
     }
   }
 

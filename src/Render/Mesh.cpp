@@ -28,7 +28,7 @@ namespace Render
     ReleaseMesh();
   }
 
-  void Mesh::Draw(const GLSLShader& InShader)
+  void Mesh::Draw(const GLSLShader& InShader, uint32_t InInstancedNum)
   {
     uint32_t diffuseIdx = 1;
     uint32_t specularIdx = 1;
@@ -71,8 +71,18 @@ namespace Render
      * 
      * @see glDrawElements()
      */
-    glDrawElements(GL_TRIANGLES, static_cast<uint32_t>(indices.size()), GL_UNSIGNED_INT, 0);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    if (InInstancedNum > 1)
+    {
+      glDrawElementsInstanced(GL_TRIANGLES, static_cast<uint32_t>(indices.size()), GL_UNSIGNED_INT, 0, InInstancedNum);
+    }
+    else
+    {
+      glDrawElements(GL_TRIANGLES, static_cast<uint32_t>(indices.size()), GL_UNSIGNED_INT, 0);
+    }
+
     glBindVertexArray(0);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     
     glActiveTexture(GL_TEXTURE0);
   }
@@ -82,10 +92,23 @@ namespace Render
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
     glGenBuffers(1, &EBO);
-
+    
     glBindVertexArray(VAO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-
+    
+    glm::vec2 translations[100];
+    int32_t index = 0;
+    constexpr float offset = 0.1f;
+    for (int32_t y = -10; y < 10; y+=2)
+    {
+      for (int32_t x = -10; x < 10; x+=2)
+      {
+        const float transX = static_cast<float>(x) / 10.0f + offset;
+        const float transY = static_cast<float>(y) / 10.0f + offset;
+        translations[index++] = glm::vec2{transX, transY};
+      }
+    }
+    
     /**
      * Copy user-defined data into the currently bound buffer
      * First argument: Type of buffer
@@ -97,9 +120,16 @@ namespace Render
      *                  GL_DYNAMIC_DRAW: The data is changed a lot and used many times
      */
     glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(decltype(vertices)::value_type), &vertices[0], GL_STATIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    
+    glGenBuffers(1, &m_instanceVBO);
+    glBindBuffer(GL_ARRAY_BUFFER, m_instanceVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(translations), &translations[0], GL_STATIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(decltype(indices)::value_type), &indices[0], GL_STATIC_DRAW);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
     // Tell OpenGL how it should interpret vertex data
     /**
@@ -118,6 +148,7 @@ namespace Render
      * Sixth argument: Offset of where the position data begins.
      */
     // vertex position
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(0));
 
@@ -127,6 +158,20 @@ namespace Render
 
     glEnableVertexAttribArray(2);
     glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(offsetof(Vertex, TexCoords)));
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+    glBindBuffer(GL_ARRAY_BUFFER, m_instanceVBO);
+    glEnableVertexAttribArray(3);
+    glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, sizeof(translations[0]), reinterpret_cast<void*>(0));
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+    /**
+     * First argument: Vertex attribute
+     * Second argument: Attribute divisor.Default is 0
+     * Meaning of 0 :                      Update the content of the vertex attribute each iteration of the vertex shader.
+     * Meaning of X(X is greater than 0) : Update the content every X instances
+     */
+    glVertexAttribDivisor(3, 1);
 
     glBindVertexArray(0);
   }

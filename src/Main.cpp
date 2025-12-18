@@ -4,6 +4,7 @@
 #include <filesystem>
 #include <windows.h>
 #include <map>
+#include <format>
 
 // glad should include before glfw
 #include <glad/glad.h>
@@ -149,9 +150,9 @@ int main()
   // }
 
   // // Create framebuffer object
-  // uint32_t FBO;
-  // glGenFramebuffers(1, &FBO);
-  // glBindFramebuffer(GL_FRAMEBUFFER, FBO);
+  uint32_t FBO;
+  glGenFramebuffers(1, &FBO);
+  glBindFramebuffer(GL_FRAMEBUFFER, FBO);
 
   // uint32_t framebufferTexture;
   // glGenTextures(1, &framebufferTexture);
@@ -162,6 +163,13 @@ int main()
   // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
+  // Multisampled texture attachment
+  uint32_t framebufferTexture_multiSampled;
+  glGenTextures(1, &framebufferTexture_multiSampled);
+  glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, framebufferTexture_multiSampled);
+  glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 10, GL_RGB, WINDOW_WIDTH, WINDOW_HEIGHT, GL_TRUE);
+  glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, 0);
+
   // /**
   //  * First argument:  The framebuffer type we're targeting(draw,read or both).
   //  * Second argument: The type of attachment we're going to attach. 0 at the end suggests we can attach more than 1 color attachment.
@@ -170,6 +178,7 @@ int main()
   //  * Fifth argument:  The mipmap level
   //  */
   // glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, framebufferTexture, 0);
+  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, framebufferTexture_multiSampled, 0);
 
   // // Create renderbuffer object
   // uint32_t RBO;
@@ -178,14 +187,22 @@ int main()
   // glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, WINDOW_WIDTH, WINDOW_HEIGHT);
   // glBindRenderbuffer(GL_RENDERBUFFER, 0);
 
+  // Create multisampled renderbuffer object
+  uint32_t RBO_multiSampled;
+  glGenRenderbuffers(1, &RBO_multiSampled);
+  glBindRenderbuffer(GL_RENDERBUFFER, RBO_multiSampled);
+  glRenderbufferStorageMultisample(GL_RENDERBUFFER, 10, GL_DEPTH24_STENCIL8, WINDOW_WIDTH, WINDOW_HEIGHT);
+  glBindRenderbuffer(GL_RENDERBUFFER, 0);
+  glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, RBO_multiSampled);
+
   // glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, RBO);
 
-  // // Check if requirements of framebuffer are all completed
-  // if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-  // {
-  //   std::println("ERROR::FRAMEBUFFER:: Framebuffer is not complete!");
-  //   glBindFramebuffer(GL_FRAMEBUFFER, 0);
-  // }
+  // Check if requirements of framebuffer are all completed
+  if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+  {
+    std::println("ERROR::FRAMEBUFFER:: Framebuffer is not complete!");
+  }
+  glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
   // Activate depth test
   glEnable(GL_DEPTH_TEST);
@@ -226,6 +243,9 @@ int main()
 
   // Enable gl_PointSize in GLSL
   glEnable(GL_PROGRAM_POINT_SIZE);
+
+  // Enable Anti-aliasing
+  glEnable(GL_MULTISAMPLE);
   
   // Use generic_string() instead of string to avoid platform diff
   // Windows: '/' will turn to '\'
@@ -235,8 +255,8 @@ int main()
 
   OpenGLStudy::Render::GLSLShader shaderProgram{
     absolute("resource/Shader/shader.vs").generic_string(), 
-    absolute("resource/Shader/shader.fs").generic_string(),
-    &gsPath
+    absolute("resource/Shader/shader.fs").generic_string()
+    // &gsPath
   };
 
   OpenGLStudy::Render::GLSLShader outlineShaderProgram{
@@ -430,6 +450,19 @@ int main()
     &normalGSPath
   };
 
+  glm::vec2 translations[100];
+  int32_t index = 0;
+  constexpr float offset = 0.1f;
+  for (int32_t y = -10; y < 10; y+=2)
+  {
+    for (int32_t x = -10; x < 10; x+=2)
+    {
+      const float transX = static_cast<float>(x) / 10.0f + offset;
+      const float transY = static_cast<float>(y) / 10.0f + offset;
+      translations[index++] = glm::vec2{transX, transY};
+    }
+  }
+
   while(!glfwWindowShouldClose(window))
   {
     updateTime();
@@ -439,6 +472,10 @@ int main()
     {
       // glBindFramebuffer(GL_FRAMEBUFFER, FBO);
       // Set background color
+      glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+      glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+
+      glBindFramebuffer(GL_FRAMEBUFFER, framebufferTexture_multiSampled);
       glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
       glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
       glEnable(GL_DEPTH_TEST);
@@ -478,15 +515,15 @@ int main()
         shaderProgram.SetMat4("normalMatrix", normalMat);
   
         // backpack
-        ourModel.Draw(shaderProgram);
+        ourModel.Draw(shaderProgram, 100);
 
-        normalVisualizeShaderProgram.Activate();
+        // normalVisualizeShaderProgram.Activate();
         
-        normalVisualizeShaderProgram.SetMat4("model", model);
-        normalVisualizeShaderProgram.SetMat4("normalMatrix", normalMat);
+        // normalVisualizeShaderProgram.SetMat4("model", model);
+        // normalVisualizeShaderProgram.SetMat4("normalMatrix", normalMat);
 
-        // normal visualize
-        ourModel.Draw(normalVisualizeShaderProgram);
+        // // normal visualize
+        // ourModel.Draw(normalVisualizeShaderProgram);
       }
       
       // 2nd. render pass: now draw slightly scaled versions of the objects, this time disabling stencil writing.
@@ -540,6 +577,12 @@ int main()
       // Set depth function back to default
       glDepthFunc(GL_LESS);
     }
+
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, FBO);
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+    glBlitFramebuffer(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     pollGLFWEvent(window);
     

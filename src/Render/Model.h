@@ -32,7 +32,7 @@ namespace Render
     public:
       Model(const std::string& InPath, EModelRenderMode InRenderMode = EModelRenderMode::Traditional);
 
-      void Draw(const GLSLShader& InShader);
+      void Draw(const GLSLShader& InShader, uint32_t InInstancedNum = 1);
 
     private:
       void LoadModel(const std::string& InPath);

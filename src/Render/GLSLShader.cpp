@@ -183,6 +183,11 @@ namespace Render
     glUniform1i(glGetUniformLocation(m_shaderID, propertyName.c_str()), value);
   }
 
+  void GLSLShader::SetVec2(const std::string& propertyName, glm::vec2 value) const
+  {
+    glUniform2f(glGetUniformLocation(m_shaderID, propertyName.c_str()), value.x, value.y);
+  }
+
   void GLSLShader::SetVec3(const std::string& propertyName, glm::vec3 value) const
   {
     glUniform3f(glGetUniformLocation(m_shaderID, propertyName.c_str()), value.x, value.y, value.z);

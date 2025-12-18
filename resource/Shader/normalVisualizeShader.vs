@@ -19,7 +19,7 @@ uniform mat4 normalMatrix;
 
 void main()
 {
-  gl_Position = projection * view * model * vec4(aPos, 1.0);
+  gl_Position = view * model * vec4(aPos, 1.0);
   mat3 normMat = mat3(normalMatrix);
 
   vs_out.normal = normalize(vec3(vec4(normMat * aNormal, 1.0)));

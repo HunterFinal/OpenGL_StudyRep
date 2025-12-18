@@ -33,7 +33,7 @@ namespace Render
       Mesh& operator=(Mesh&& Other) noexcept;
 
     public:
-      void Draw(const GLSLShader& InShader);
+      void Draw(const GLSLShader& InShader, uint32_t InInstancedNum);
 
     private:
       void InitializeMesh();
@@ -43,6 +43,8 @@ namespace Render
       uint32_t VAO;
       uint32_t VBO;
       uint32_t EBO;
+
+      uint32_t m_instanceVBO;
   };
 
 } // namespace OpenGLStudy::Render
