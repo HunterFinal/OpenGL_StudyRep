@@ -129,7 +129,7 @@ namespace Render
         {
           char infoLog[infoLogLength];
           glGetShaderInfoLog(geometryShader, infoLogLength, nullptr, infoLog);
-          std::println("ERROR:Shader fragment compilation failed\n{}", infoLog);
+          std::println("ERROR:Shader geometory compilation failed\n{}", infoLog);
         }
       }
     }

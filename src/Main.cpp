@@ -422,6 +422,14 @@ int main()
   glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(projection), glm::value_ptr(projection));
   glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
+  std::string&& normalGSPath = absolute("resource/Shader/normalVisualizeShader.gs").generic_string();
+
+  OpenGLStudy::Render::GLSLShader normalVisualizeShaderProgram{
+    absolute("resource/Shader/normalVisualizeShader.vs").generic_string(),
+    absolute("resource/Shader/normalVisualizeShader.fs").generic_string(),
+    &normalGSPath
+  };
+
   while(!glfwWindowShouldClose(window))
   {
     updateTime();
@@ -452,6 +460,8 @@ int main()
       // 1st. render pass, draw objects as normal, writing to the stencil buffer
       {
         shaderProgram.Activate();
+
+        shaderProgram.SetFloat("time", g_LastFrameTime);
   
         shaderProgram.SetVec3("viewPos", g_Camera.GetPosition());
         shaderProgram.SetMat4("projection", projection);
@@ -469,6 +479,14 @@ int main()
   
         // backpack
         ourModel.Draw(shaderProgram);
+
+        normalVisualizeShaderProgram.Activate();
+        
+        normalVisualizeShaderProgram.SetMat4("model", model);
+        normalVisualizeShaderProgram.SetMat4("normalMatrix", normalMat);
+
+        // normal visualize
+        ourModel.Draw(normalVisualizeShaderProgram);
       }
       
       // 2nd. render pass: now draw slightly scaled versions of the objects, this time disabling stencil writing.

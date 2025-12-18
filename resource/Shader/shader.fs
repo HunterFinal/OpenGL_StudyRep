@@ -93,12 +93,12 @@ void main()
 
   // FragColor = vec4(fragRGB, 1.0);
 
-  // FragColor = texture(material.texture_diffuse1, TexCoords);
+  FragColor = texture(material.texture_diffuse1, fs_in.TexCoords);
 
-  vec3 I = normalize(fs_in.FragPos - viewPos);
-  vec3 R = reflect(I, normalize(fs_in.Normal));
+  // vec3 I = normalize(fs_in.FragPos - viewPos);
+  // vec3 R = reflect(I, normalize(fs_in.Normal));
 
-  FragColor = vec4(texture(skybox, R).rgb, 1.0);
+  // FragColor = vec4(texture(skybox, R).rgb, 1.0);
 }
 
 float LinearizeDepth(float depth)
